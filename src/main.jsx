@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createGuardianEngine } from './engine.js';
 import { installWebMcp, toolDefinitions } from './webmcp.js';
-import { airports, demoRoute } from './scenario.js';
+import { airports, demoRoute, forecasts, observations } from './scenario.js';
 import './styles.css';
 import './live.css';
+import './national.css';
 
 const routeDots = [{ x: 16, y: 77, id: 'KTPF' }, { x: 47, y: 49, id: 'KCTY' }, { x: 79, y: 20, id: 'KTLH' }];
 const categoryClass = value => value.toLowerCase();
@@ -17,6 +18,8 @@ function App() {
   const [liveContext, setLiveContext] = useState(null);
   const [liveError, setLiveError] = useState('');
   const [running, setRunning] = useState(false);
+  const [watching, setWatching] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
   const [decision, setDecision] = useState('');
   const state = engine.state;
   const invoke = (name, input = {}) => { try { engine.run(name, input); redraw(n => n + 1); } catch (error) { alert(error.message); } };
@@ -38,16 +41,22 @@ function App() {
     try {
       const [awcResponse, appleResponse] = await Promise.all([
         fetch('/api/weather?type=metar&ids=KTPF,KCTY,KTLH&format=json'),
-        fetch(`/api/weatherkit?lat=${airports.KCTY.lat}&lon=${airports.KCTY.lon}`)
+        fetch('/api/weatherkit?scope=us')
       ]);
       if (!awcResponse.ok || !appleResponse.ok) throw new Error(`AWC ${awcResponse.status} / WeatherKit ${appleResponse.status}`);
       const [awc, apple] = await Promise.all([awcResponse.json(), appleResponse.json()]);
-      setLiveContext({ awcReports: Array.isArray(awc) ? awc.length : 0, appleAsOf: apple.currentWeather?.asOf || 'available' });
+      setLiveContext({ awcReports: Array.isArray(awc) ? awc.length : 0, appleAsOf: apple.samples?.[0]?.asOf || 'available', weatherSamples: apple.samples || [] });
       setMode('live');
     } catch (error) {
       setLiveError(error.message);
       setMode('scenario');
     }
+  };
+  const enableRouteWatch = async () => {
+    setWatching(true);
+    setAlertVisible(true);
+    if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
+    if ('Notification' in window && Notification.permission === 'granted') new Notification('IMC Guardian demo alert', { body: 'KTLH ceiling trend worsened. Aviate first. Review the new evidence when workload permits.' });
   };
   useEffect(() => { installWebMcp(engine, () => redraw(n => n + 1)).then(setNativeCount); }, [engine]);
   const assessment = state.assessment;
@@ -63,7 +72,11 @@ function App() {
 
       <section className="flight-strip" id="route"><div><small>FLIGHT</small><b>KTPF <span>→</span> KTLH</b></div><div><small>DEPARTURE</small><b>SEP 2 · 6:00 PM ET</b></div><div><small>RULES / AIRCRAFT</small><b>VFR · C172</b></div><div><small>PILOT PROFILE</small><b>VFR ONLY</b></div><button onClick={runAssessment} disabled={running}>{running ? 'CHECKING ROUTE...' : assessment ? 'ROUTE CHECK COMPLETE ✓' : 'ASK AI TO CHECK ROUTE'}</button></section>
 
-      <section className="evidence" id="evidence"><div className="section-title"><p className="eyebrow">ONE ROUTE. EVERY SIGNAL.</p><h2>Weather evidence the agent can actually read.</h2><p>Structured WebMCP tools expose airport conditions, forecast trends, route advisories, alternates, and provenance without asking an agent to scrape the screen.</p></div><div className="condition-grid">{demoRoute.stations.map((id, index) => <article key={id} className="condition"><div className="condition-top"><span>{index === 0 ? 'ORIGIN' : index === 2 ? 'DESTINATION' : 'EN ROUTE'}</span><b className={categoryClass(airports[id].category)}>{airports[id].category}</b></div><h3>{id}</h3><p>{airports[id].name}</p><div className="numbers"><span><small>CEILING</small><b>{airports[id].ceiling.toLocaleString()} ft</b></span><span><small>VISIBILITY</small><b>{airports[id].visibility} SM</b></span></div><footer><i className={index ? 'down' : ''}/>{index ? 'Deteriorating toward departure' : 'Conditions steady'}</footer></article>)}</div></section>
+      <section className="evidence" id="evidence"><div className="section-title"><p className="eyebrow">ONE ROUTE. EVERY SIGNAL.</p><h2>Weather evidence the agent can actually read.</h2><p>Structured WebMCP tools expose airport conditions, forecast trends, route advisories, alternates, and provenance without asking an agent to scrape the screen.</p></div><div className="condition-grid">{demoRoute.stations.map((id, index) => <article key={id} className="condition"><div className="condition-top"><span>{index === 0 ? 'ORIGIN' : index === 2 ? 'DESTINATION' : 'EN ROUTE'}</span><b className={categoryClass(airports[id].category)}>{airports[id].category}</b></div><h3>{id}</h3><p>{airports[id].name}</p><code className="raw-metar">{observations[id].raw}</code><div className="numbers"><span><small>CEILING AGL</small><b>{airports[id].ceiling.toLocaleString()} FT</b></span><span><small>VISIBILITY</small><b>{airports[id].visibility} SM</b></span><span><small>SURFACE WIND</small><b>{airports[id].wind}</b></span><span><small>OBSERVED</small><b>2153Z</b></span></div><div className="taf"><small>TAF TREND</small><p>{forecasts[id]}</p></div><footer><i className={index ? 'down' : ''}/>{index ? 'Deteriorating toward departure' : 'Conditions steady'}</footer></article>)}</div><div className="advisory-strip"><span>G-AIRMET IFR</span><b>VALID 2100Z–0300Z</b><p>Ceilings below 1,000 FT and visibility below 3 SM forecast over the northern route corridor.</p><em>FORECAST ADVISORY · VERIFY WITH OFFICIAL SOURCE</em></div></section>
+
+      <section className="national-weather"><div className="national-head"><div><p className="eyebrow">APPLE WEATHERKIT · NATIONAL CONTEXT</p><h2>A living weather layer,<br/>beyond one route.</h2></div><p>WeatherKit samples current cloud cover, precipitation, wind, and temperature across the United States. Aviation Weather Center data remains the source for flight categories and advisories.</p></div><div className="us-weather-map"><div className="usa-shape">USA</div><div className="cloud-band band-one"/><div className="cloud-band band-two"/>{liveContext?.weatherSamples?.map(sample => <div key={sample.name} className="weather-sample" style={{ left: `${sample.x}%`, top: `${sample.y}%`, '--cloud': Math.max(.16, sample.cloudCover || 0) }}><i/><span><b>{sample.name}</b><small>{Math.round((sample.cloudCover || 0) * 100)}% cloud · {Math.round(sample.temperature)}°C</small></span></div>)}{!liveContext && <button onClick={loadLiveContext}>LOAD LIVE U.S. WEATHERKIT LAYER <span>→</span></button>}<div className="flight-animation"><span className="plane">✈</span><i/><b>KTPF → KTLH</b></div><div className="ai-callout"><small>AI ROUTE WATCH</small><p>“Cloud cover is building north of Cross City. Want me to keep watching the route?”</p></div></div><footer><span>Weather data provided by Apple WeatherKit</span><span>{liveContext ? `12 LIVE SAMPLE POINTS · ${new Date(liveContext.appleAsOf).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'LIVE LAYER LOADS ON REQUEST'}</span></footer></section>
+
+      <section className="route-watch"><div><p className="eyebrow">DEMO NOTIFICATIONS · PILOT CONTROLLED</p><h2>Watch the route without pretending to fly the airplane.</h2><p>IMC Guardian can monitor material changes to ceilings, visibility, advisories, and alternate conditions. Alerts remain short and defer to cockpit workload.</p><div className="priority"><b>AVIATE</b><span>Maintain aircraft control</span><b>NAVIGATE</b><span>Know position and intended path</span><b>COMMUNICATE</b><span>Use ATC or Flight Service as appropriate</span></div></div><div className="watch-card"><div className="watch-head"><span><i className={watching ? 'on' : ''}/> ROUTE WATCH</span><b>{watching ? 'ACTIVE DEMO' : 'OFF'}</b></div><label>TRIGGER WHEN<select defaultValue="category"><option value="category">Flight category worsens</option><option value="ceiling">Ceiling falls below personal minimum</option><option value="advisory">New advisory intersects route</option></select></label><label>DELIVERY<div className="delivery"><button className="selected">IN APP</button><button>BROWSER</button><button>SMS LATER</button></div></label><button className="watch-action" onClick={enableRouteWatch}>{watching ? 'ROUTE WATCH ENABLED ✓' : 'ENABLE DEMO NOTIFICATIONS'}</button>{alertVisible && <div className="weather-alert"><div><span>DEMO ALERT · 2 MIN AGO</span><b>KTLH ceiling trend worsened</b><p>Forecast ceiling changed from 1,200 FT to 700 FT temporarily. G-AIRMET IFR still overlaps the route.</p></div><strong>AVIATION ATTENTION CUE</strong><small>Aviate first. Review when workload permits. Contact ATC or Flight Service for operational information. This alert does not direct a maneuver.</small></div>}</div></section>
 
       <section className={`assessment ${assessment ? 'revealed' : ''}`}><div><p className="eyebrow">EXPLAINABLE ROUTE ASSESSMENT</p><h2>{assessment ? assessment.headline : 'Ask once. Inspect every factor.'}</h2><p>{assessment ? assessment.recommendation : 'The agent assembles evidence and alternatives, but it cannot clear the flight or make the pilot’s decision.'}</p></div><div className="risk"><span>ROUTE RISK</span><b>{assessment?.level || 'PENDING'}</b><small>{assessment ? '3 material factors found' : 'Run the route check'}</small></div>{assessment && <ul>{assessment.factors.map(item => <li key={item}><i/> {item}</li>)}</ul>}</section>
 
