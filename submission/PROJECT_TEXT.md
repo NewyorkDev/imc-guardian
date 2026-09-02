@@ -32,7 +32,7 @@ NOAA Aviation Weather Center is the aviation-data foundation. Because its API do
 
 We also created a clearly labeled scenario mode. That makes the judging flow reproducible even when live weather changes or a source is temporarily unavailable. It never presents scenario values as live reports.
 
-The pilot can enable a demo route watch for a worsening flight category, a ceiling below a personal minimum, or a new advisory intersecting the route. WebMCP exposes the setup, the detected change, and alert acknowledgment as separate auditable tools. The alert follows the cockpit priority of aviate, navigate, communicate and never directs a maneuver.
+The pilot can enable Second Pair of Eyes, a demo route watch for a worsening flight category, a ceiling below a personal minimum, or a new advisory intersecting the route. WebMCP exposes the setup, the detected change, and alert acknowledgment as separate auditable tools. The alert follows the cockpit priority of aviate, navigate, communicate and never directs a maneuver.
 
 ## Challenges
 

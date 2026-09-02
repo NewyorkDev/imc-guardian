@@ -560,7 +560,7 @@ function App() {
               <b>KTPA → KJFK</b>
             </div>
             <div className="ai-callout">
-              <small>AI ROUTE WATCH</small>
+              <small>SECOND PAIR OF EYES</small>
               <p>
                 “Conditions are changing farther north. Want me to keep watching
                 the Tampa to JFK corridor?”
@@ -598,7 +598,7 @@ function App() {
           <div className="watch-card">
             <div className="watch-head">
               <span>
-                <i className={watching ? "on" : ""} /> ROUTE WATCH
+                <i className={watching ? "on" : ""} /> SECOND PAIR OF EYES
               </span>
               <b>{watching ? "ACTIVE DEMO" : "OFF"}</b>
             </div>
@@ -621,7 +621,9 @@ function App() {
               </div>
             </label>
             <button className="watch-action" onClick={enableRouteWatch}>
-              {watching ? "ROUTE WATCH ENABLED ✓" : "ENABLE DEMO NOTIFICATIONS"}
+              {watching
+                ? "SECOND PAIR OF EYES ENABLED ✓"
+                : "ENABLE A SECOND PAIR OF EYES"}
             </button>
             {alertVisible && (
               <div className="weather-alert">
