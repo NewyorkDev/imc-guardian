@@ -28,7 +28,7 @@ The agent can inspect the airport evidence, explain why the route risk increased
 
 We built a React and Vite application with a deterministic aviation-risk engine and twelve imperative WebMCP tools registered through `document.modelContext.registerTool`. The user interface and the agent share the same route, assessment, alternatives, route watch, notifications, validation, decision, and live tool trace.
 
-NOAA Aviation Weather Center is the aviation-data foundation. Because its API does not permit browser cross-origin requests, the project uses a scoped Vercel server-side proxy with caching and a custom user agent. Apple WeatherKit is wired as a second server-side source for supplemental general weather context such as precipitation, wind, visibility trends, and alerts. The WeatherKit signing credentials never enter the browser bundle.
+NOAA Aviation Weather Center is the aviation-data foundation. Because its API does not permit browser cross-origin requests, the project uses a scoped Vercel server-side proxy with caching and a custom user agent. Apple WeatherKit is wired as a second server-side source for supplemental global context such as current conditions, cloud cover, precipitation, temperature, and wind. The WeatherKit signing credentials never enter the browser bundle.
 
 An on-demand global layer samples twelve Apple WeatherKit locations and visualizes current conditions, cloud cover, temperature, and wind around the world. The endpoint is cached for one hour so repeated visitors reuse the same Apple response instead of multiplying calls. It is presented separately from the route scenario because general weather context is not the same thing as aviation weather evidence.
 
