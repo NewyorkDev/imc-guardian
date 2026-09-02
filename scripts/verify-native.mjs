@@ -17,7 +17,8 @@ try {
     const call = async (name, input = {}) => {
       const tool = tools.find(candidate => candidate.name === name);
       if (!tool) throw new Error(`Missing native tool: ${name}`);
-      return JSON.parse(await document.modelContext.executeTool(tool, JSON.stringify(input)));
+      const envelope = JSON.parse(await document.modelContext.executeTool(tool, JSON.stringify(input)));
+      return envelope.content?.[0]?.text ? JSON.parse(envelope.content[0].text) : envelope;
     };
     const context = await call('set_flight_context', { origin: 'KTPF', destination: 'KTLH', departure: '2026-09-02T18:00:00-04:00', rules: 'VFR', aircraft: 'C172', pilot: 'VFR only' });
     const conditions = await call('check_airport_conditions', { airportIds: ['KTPF', 'KCTY', 'KTLH'] });
