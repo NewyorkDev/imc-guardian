@@ -25,6 +25,29 @@ export default async function handler(request, response) {
   if (!prompt)
     return response.status(400).json({ error: "A pilot request is required." });
   const system = `You are the natural-language planner inside IMC Guardian, a clearly labeled aviation decision-support prototype. You do not invent weather, issue a clearance, say a flight is safe, or make a go/no-go decision. Choose an ordered subset of these site-owned WebMCP tools: ${ALLOWED_TOOLS.join(", ")}. For the standard KTPF to KTLH VFR request, include route context, airport conditions, advisories, assessment, alternates, and comparison. If the user asks for monitoring, include configure_route_watch, check_route_changes, and validate_weather_alert in that order. Return strict JSON with keys interpretation (string), toolPlan (array of allowed tool names), and pilotMessage (short string that says the site tools will supply evidence and the pilot decides).`;
+  const safePlan = () => {
+    const monitoring = /monitor|watch|alert|notify|change|deteriorat/i.test(prompt);
+    return {
+      interpretation: "Check the route, surface the weather evidence, compare options, and leave the operational decision to the pilot.",
+      toolPlan: [
+        "set_flight_context",
+        "check_airport_conditions",
+        "check_route_advisories",
+        "assess_route_weather",
+        "find_safer_alternates",
+        "compare_route_options",
+        ...(monitoring
+          ? [
+              "configure_route_watch",
+              "check_route_changes",
+              "validate_weather_alert",
+            ]
+          : []),
+      ],
+      pilotMessage:
+        "IMC Guardian will assemble and cross-check the evidence. The pilot makes the final decision.",
+    };
+  };
   try {
     const runModel = async (model, strictJson = true) => {
       const requestBody = {
@@ -47,12 +70,39 @@ export default async function handler(request, response) {
       });
       return { upstream, payload: await upstream.json() };
     };
-    let { upstream, payload } = await runModel("openai/gpt-oss-120b");
-    if (!upstream.ok) ({ upstream, payload } = await runModel("openai/gpt-oss-20b"));
-    if (!upstream.ok) return response.status(upstream.status).json({ error: "Free model is temporarily unavailable.", detail: payload.error?.message || "Unknown model error" });
+    const attempts = [
+      ["openai/gpt-oss-120b", true],
+      ["openai/gpt-oss-120b", false],
+      ["openai/gpt-oss-20b", true],
+      ["openai/gpt-oss-20b", false],
+    ];
+    let upstream;
+    let payload;
+    for (const [model, strictJson] of attempts) {
+      ({ upstream, payload } = await runModel(model, strictJson));
+      if (upstream.ok) break;
+    }
+    if (!upstream?.ok) {
+      response.setHeader("Cache-Control", "no-store");
+      return response.status(200).json({
+        provider: "IMC Guardian fallback",
+        model: "Validated deterministic planner",
+        usage: null,
+        fallback: true,
+        upstreamDetail:
+          payload?.error?.message || "Free model temporarily unavailable",
+        ...safePlan(),
+      });
+    }
     const content = payload.choices?.[0]?.message?.content || "{}";
     const jsonText = content.match(/\{[\s\S]*\}/)?.[0] || "{}";
-    const plan = JSON.parse(jsonText);
+    let plan;
+    try {
+      plan = JSON.parse(jsonText);
+    } catch {
+      plan = safePlan();
+      plan.fallback = true;
+    }
     plan.toolPlan = (Array.isArray(plan.toolPlan) ? plan.toolPlan : []).filter(
       (name) => ALLOWED_TOOLS.includes(name),
     );
