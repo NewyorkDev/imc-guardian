@@ -341,8 +341,8 @@ function App() {
               Watch every tool.
             </h2>
             <p>
-              GPT-OSS 20B on Groq interprets the request and chooses from an
-              allowlisted set of site tools. The website supplies the
+              A Groq-hosted open-weight model interprets the request and chooses
+              from an allowlisted set of site tools. The website supplies the
               weather evidence. The model cannot invent reports or authorize the
               flight.
             </p>
@@ -365,7 +365,7 @@ function App() {
               }
             >
               {aiRun.status === "planning"
-                ? "GPT-OSS IS PLANNING..."
+                ? "THE AI IS PLANNING..."
                 : aiRun.status === "executing"
                   ? "RUNNING WEBMCP TOOLS..."
                   : "RUN LIVE AI DEMO"}{" "}
@@ -388,7 +388,7 @@ function App() {
               </div>
               {aiRun.status !== "idle" && (
                 <div className="ai-bubble">
-                  <small>GPT-OSS 20B ON GROQ · NATURAL-LANGUAGE PLAN</small>
+                  <small>GROQ OPEN-WEIGHT MODEL · NATURAL-LANGUAGE PLAN</small>
                   <p>
                     {aiRun.status === "planning"
                       ? "Interpreting the route request and selecting site-owned tools..."
