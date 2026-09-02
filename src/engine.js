@@ -37,12 +37,16 @@ export function createGuardianEngine() {
           output = { plainLanguage: 'A VFR pilot can lose outside visual references when entering cloud or reduced visibility. Spatial disorientation can develop quickly. Forecasts and automated analysis have limitations.', action: 'Do not use this prototype as a substitute for an official briefing, ATC, a flight instructor, or pilot judgment.' }; break;
         case 'configure_route_watch':
           requireRoute();
-          state.routeWatch = { active: true, trigger: input.trigger || 'flight_category_worsens', delivery: input.delivery || 'in_app', scope: `${state.route.origin}-${state.route.destination}` };
+          state.routeWatch = { active: true, trigger: input.trigger || 'ceiling_below_threshold', ceilingThresholdFt: input.ceilingThresholdFt || 1500, visibilityThresholdSm: input.visibilityThresholdSm || 5, delivery: input.delivery || 'in_app', scope: `${state.route.origin}-${state.route.destination}` };
           output = { ...state.routeWatch, status: 'demo_watch_active', limitation: 'Attention cue only. Monitoring is not guaranteed and does not replace official inflight weather sources.' }; break;
         case 'check_route_changes':
           requireRoute();
-          state.alert = { id: 'DEMO-KTLH-001', severity: 'attention', changed: true, airport: 'KTLH', field: 'forecast_ceiling', previous: '1,200 FT', current: '700 FT temporarily', advisoryStillActive: 'G-AIRMET IFR', pilotAction: null };
+          state.alert = { id: 'DEMO-KTLH-001', severity: 'attention', changed: true, airport: 'KTLH', field: 'forecast_ceiling', threshold: `${state.routeWatch?.ceilingThresholdFt || 1500} FT`, previous: '1,200 FT', current: '700 FT temporarily', advisoryStillActive: 'G-AIRMET IFR', validationStatus: 'pending', pilotAction: null };
           output = { alert: state.alert, instruction: 'Aviate first. Review when workload permits. Contact ATC or Flight Service for operational information. This alert does not direct a maneuver.' }; break;
+        case 'validate_weather_alert':
+          if (!state.alert || input.alertId !== state.alert.id) throw new Error('A valid active alertId is required.');
+          state.alert.validationStatus = 'validated_demo_evidence';
+          output = { alertId: state.alert.id, validated: true, status: state.alert.validationStatus, checks: [{ check: 'threshold_crossing', result: '700 FT is below configured 1,500 FT ceiling threshold' }, { check: 'forecast_context', result: 'KTLH TAF scenario includes temporary 700 FT ceiling' }, { check: 'advisory_context', result: 'G-AIRMET IFR scenario remains active over the route corridor' }], provenance: ['KTLH TAF reproducible scenario', 'G-AIRMET IFR reproducible scenario'], limitation: 'Demo validation checks consistency between supplied scenario products. It is not an official briefing or operational guarantee.' }; break;
         case 'acknowledge_weather_alert':
           if (!state.alert || input.alertId !== state.alert.id) throw new Error('A valid active alertId is required.');
           output = { acknowledged: true, alertId: input.alertId, status: 'attention_cue_acknowledged', note: 'Acknowledgment does not resolve the weather condition or authorize a flight action.' }; break;

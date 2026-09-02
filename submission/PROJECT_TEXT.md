@@ -8,7 +8,7 @@ Character count: 178
 
 ## About the project
 
-IMC Guardian is an aviation weather decision-support prototype. A pilot can enter a proposed route and ask an AI to check the weather. Eleven WebMCP tools give the agent structured access to the route, airport observations, forecasts, advisories, risk factors, nearby alternates, route-watch notifications, and decision options.
+IMC Guardian is an aviation weather decision-support prototype. A pilot can enter a proposed route and ask an AI to check the weather. Twelve WebMCP tools give the agent structured access to the route, airport observations, forecasts, advisories, risk factors, nearby alternates, validated route-watch notifications, and decision options.
 
 The application does not tell a pilot that a flight is safe, issue a clearance, or replace an official weather briefing. It makes the evidence and pressure points easier to see so the pilot can make a more informed decision.
 
@@ -26,13 +26,17 @@ The agent can inspect the airport evidence, explain why the route risk increased
 
 ## How we built it
 
-We built a React and Vite application with a deterministic aviation-risk engine and eleven imperative WebMCP tools registered through `document.modelContext.registerTool`. The user interface and the agent share the same route, assessment, alternatives, route watch, notifications, decision, and live tool trace.
+We built a React and Vite application with a deterministic aviation-risk engine and twelve imperative WebMCP tools registered through `document.modelContext.registerTool`. The user interface and the agent share the same route, assessment, alternatives, route watch, notifications, validation, decision, and live tool trace.
 
 NOAA Aviation Weather Center is the aviation-data foundation. Because its API does not permit browser cross-origin requests, the project uses a scoped Vercel server-side proxy with caching and a custom user agent. Apple WeatherKit is wired as a second server-side source for supplemental general weather context such as precipitation, wind, visibility trends, and alerts. The WeatherKit signing credentials never enter the browser bundle.
 
+An on-demand live corridor samples nine Apple WeatherKit points from Tampa to JFK and visualizes cloud cover, temperature, wind, precipitation, and changing conditions around an animated route. The endpoint is cached for 30 minutes so repeated visitors reuse the same Apple response instead of multiplying calls.
+
+The frontend also includes a live natural-language agent demo using GPT-OSS 20B on Groq. The model interprets the pilot's sentence and chooses an ordered subset of allowlisted site tools. The browser executes those actual WebMCP tools and shows every step moving from queued to executing to shared UI state, along with model token usage. Weather facts come from the application tools and data sources, not the model's memory.
+
 We also created a clearly labeled scenario mode. That makes the judging flow reproducible even when live weather changes or a source is temporarily unavailable. It never presents scenario values as live reports.
 
-The pilot can enable Second Pair of Eyes, a demo route watch for a worsening flight category, a ceiling below a personal minimum, or a new advisory intersecting the route. WebMCP exposes the setup, the detected change, and alert acknowledgment as separate auditable tools. The alert follows the cockpit priority of aviate, navigate, communicate and never directs a maneuver.
+The pilot can enable Second Pair of Eyes, a focused demo route watch for a worsening flight category, a ceiling below a user-configured threshold, reduced visibility, or a new advisory intersecting the route. WebMCP exposes setup, change detection, validation, and acknowledgment as separate auditable tools. Before presenting the alert, the validation tool checks the threshold crossing against the TAF scenario and overlapping advisory context. The alert follows the cockpit priority of aviate, navigate, communicate and never directs a maneuver.
 
 ## Challenges
 
@@ -56,4 +60,4 @@ Longer term, the same approach could support pilot-defined personal minimums, in
 
 ## Built with
 
-WebMCP imperative API, React, JavaScript, HTML, CSS, Vite, Vitest, Node.js, Vercel Functions, NOAA Aviation Weather Center API, Apple WeatherKit, JSON Web Tokens, GitHub, Vercel
+WebMCP imperative API, React, JavaScript, HTML, CSS, Vite, Vitest, Playwright, Node.js, Vercel Functions, NOAA Aviation Weather Center API, Apple WeatherKit, Groq, GPT-OSS 20B, JSON Web Tokens, GitHub, Vercel

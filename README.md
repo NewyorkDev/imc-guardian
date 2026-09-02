@@ -1,6 +1,6 @@
 # IMC Guardian
 
-IMC Guardian is an aviation weather decision-support prototype built for the WebMCP Challenge. A pilot can ask an AI to inspect a proposed VFR route. Eleven site-owned WebMCP tools expose the route, airport conditions, advisories, risk factors, alternate airports, route-watch alerts, decision tradeoffs, and a human decision checkpoint.
+IMC Guardian is an aviation weather decision-support prototype built for the WebMCP Challenge. A pilot can ask an AI to inspect a proposed VFR route. Twelve site-owned WebMCP tools expose the route, airport conditions, advisories, risk factors, alternate airports, validated route-watch alerts, decision tradeoffs, and a human decision checkpoint.
 
 The application is not an official weather briefing, flight-planning service, clearance system, or go/no-go authority. The pilot in command remains responsible for every flight decision.
 
@@ -13,7 +13,7 @@ The application is not an official weather briefing, flight-planning service, cl
 
 ## WebMCP tools
 
-`set_flight_context`, `check_airport_conditions`, `check_route_advisories`, `assess_route_weather`, `find_safer_alternates`, `compare_route_options`, `explain_imc_risk`, `configure_route_watch`, `check_route_changes`, `acknowledge_weather_alert`, `record_pilot_decision`
+`set_flight_context`, `check_airport_conditions`, `check_route_advisories`, `assess_route_weather`, `find_safer_alternates`, `compare_route_options`, `explain_imc_risk`, `configure_route_watch`, `check_route_changes`, `validate_weather_alert`, `acknowledge_weather_alert`, `record_pilot_decision`
 
 ## Local development
 

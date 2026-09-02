@@ -92,10 +92,14 @@ function App() {
   const enableRouteWatch = async () => {
     if (!state.route) invoke("set_flight_context", demoRoute);
     invoke("configure_route_watch", {
-      trigger: "flight_category_worsens",
+      trigger: "ceiling_below_threshold",
+      ceilingThresholdFt: 1500,
+      visibilityThresholdSm: 5,
       delivery: "in_app",
     });
-    invoke("check_route_changes");
+    const change = invoke("check_route_changes");
+    if (change?.alert?.id)
+      invoke("validate_weather_alert", { alertId: change.alert.id });
     setWatching(true);
     setAlertVisible(true);
     if ("Notification" in window && Notification.permission === "default")
@@ -136,7 +140,9 @@ function App() {
         set_flight_context: demoRoute,
         check_airport_conditions: { airportIds: demoRoute.stations },
         configure_route_watch: {
-          trigger: "flight_category_worsens",
+          trigger: "ceiling_below_threshold",
+          ceilingThresholdFt: 1500,
+          visibilityThresholdSm: 5,
           delivery: "in_app",
         },
       };
@@ -144,7 +150,11 @@ function App() {
         invoke("set_flight_context", demoRoute);
       for (let index = 0; index < plan.toolPlan.length; index += 1) {
         setAiRun((current) => ({ ...current, active: index }));
-        invoke(plan.toolPlan[index], inputs[plan.toolPlan[index]] || {});
+        const input =
+          plan.toolPlan[index] === "validate_weather_alert"
+            ? { alertId: engine.state.alert?.id }
+            : inputs[plan.toolPlan[index]] || {};
+        invoke(plan.toolPlan[index], input);
         await new Promise((resolve) => window.setTimeout(resolve, 260));
       }
       setAiRun((current) => ({
@@ -355,7 +365,7 @@ function App() {
               }
             >
               {aiRun.status === "planning"
-                ? "NEMOTRON IS PLANNING..."
+                ? "GPT-OSS IS PLANNING..."
                 : aiRun.status === "executing"
                   ? "RUNNING WEBMCP TOOLS..."
                   : "RUN LIVE AI DEMO"}{" "}
@@ -378,7 +388,7 @@ function App() {
               </div>
               {aiRun.status !== "idle" && (
                 <div className="ai-bubble">
-                  <small>NEMOTRON · NATURAL-LANGUAGE PLAN</small>
+                  <small>GPT-OSS 20B ON GROQ · NATURAL-LANGUAGE PLAN</small>
                   <p>
                     {aiRun.status === "planning"
                       ? "Interpreting the route request and selecting site-owned tools..."
@@ -604,11 +614,10 @@ function App() {
             </div>
             <label>
               TRIGGER WHEN
-              <select defaultValue="category">
+              <select defaultValue="ceiling">
+                <option value="ceiling">Ceiling crosses 1,500 FT threshold</option>
                 <option value="category">Flight category worsens</option>
-                <option value="ceiling">
-                  Ceiling falls below personal minimum
-                </option>
+                <option value="visibility">Visibility crosses 5 SM threshold</option>
                 <option value="advisory">New advisory intersects route</option>
               </select>
             </label>
@@ -629,12 +638,14 @@ function App() {
               <div className="weather-alert">
                 <div>
                   <span>DEMO ALERT · 2 MIN AGO</span>
-                  <b>KTLH ceiling trend worsened</b>
+                  <b>Validated: KTLH ceiling crossed your threshold</b>
                   <p>
-                    Forecast ceiling changed from 1,200 FT to 700 FT
-                    temporarily. G-AIRMET IFR still overlaps the route.
+                    700 FT is below your configured 1,500 FT threshold. The TAF
+                    scenario and overlapping G-AIRMET IFR confirm the trend.
                   </p>
                 </div>
+                <strong>✓ DOUBLE-CHECKED BY WEBMCP</strong>
+                <small>Threshold crossing · TAF context · advisory context</small>
                 <strong>AVIATION ATTENTION CUE</strong>
                 <small>
                   Aviate first. Review when workload permits. Contact ATC or

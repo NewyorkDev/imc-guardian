@@ -21,9 +21,10 @@ describe('IMC Guardian engine', () => {
   it('keeps route-watch alerts informational and acknowledgeable', () => {
     const engine = createGuardianEngine();
     engine.run('set_flight_context', { origin: 'KTPF', destination: 'KTLH', departure: '2026-09-02T18:00:00-04:00', rules: 'VFR' });
-    expect(engine.run('configure_route_watch', { trigger: 'flight_category_worsens' }).active).toBe(true);
+    expect(engine.run('configure_route_watch', { trigger: 'ceiling_below_threshold', ceilingThresholdFt: 1500 }).active).toBe(true);
     const change = engine.run('check_route_changes');
     expect(change.alert.pilotAction).toBeNull();
+    expect(engine.run('validate_weather_alert', { alertId: change.alert.id }).validated).toBe(true);
     expect(engine.run('acknowledge_weather_alert', { alertId: change.alert.id }).acknowledged).toBe(true);
   });
 });
