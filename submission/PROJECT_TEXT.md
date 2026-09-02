@@ -30,7 +30,7 @@ We built a React and Vite application with a deterministic aviation-risk engine 
 
 NOAA Aviation Weather Center is the aviation-data foundation. Because its API does not permit browser cross-origin requests, the project uses a scoped Vercel server-side proxy with caching and a custom user agent. Apple WeatherKit is wired as a second server-side source for supplemental general weather context such as precipitation, wind, visibility trends, and alerts. The WeatherKit signing credentials never enter the browser bundle.
 
-An on-demand live corridor samples nine Apple WeatherKit points from Tampa to JFK and visualizes cloud cover, temperature, wind, precipitation, and changing conditions around an animated route. The endpoint is cached for 30 minutes so repeated visitors reuse the same Apple response instead of multiplying calls.
+An on-demand global layer samples twelve Apple WeatherKit locations and visualizes current conditions, cloud cover, temperature, and wind around the world. The endpoint is cached for one hour so repeated visitors reuse the same Apple response instead of multiplying calls. It is presented separately from the route scenario because general weather context is not the same thing as aviation weather evidence.
 
 The frontend also includes a live natural-language agent demo using GPT-OSS 120B on Groq. The model interprets the pilot's sentence and chooses an ordered subset of allowlisted site tools. The browser executes those actual WebMCP tools and shows every step moving from queued to executing to shared UI state, along with model token usage. Weather facts come from the application tools and data sources, not the model's memory.
 
