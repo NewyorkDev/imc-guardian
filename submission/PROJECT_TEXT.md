@@ -32,7 +32,7 @@ NOAA Aviation Weather Center is the aviation-data foundation. Because its API do
 
 An on-demand live corridor samples nine Apple WeatherKit points from Tampa to JFK and visualizes cloud cover, temperature, wind, precipitation, and changing conditions around an animated route. The endpoint is cached for 30 minutes so repeated visitors reuse the same Apple response instead of multiplying calls.
 
-The frontend also includes a live natural-language agent demo using GPT-OSS 20B on Groq. The model interprets the pilot's sentence and chooses an ordered subset of allowlisted site tools. The browser executes those actual WebMCP tools and shows every step moving from queued to executing to shared UI state, along with model token usage. Weather facts come from the application tools and data sources, not the model's memory.
+The frontend also includes a live natural-language agent demo using GPT-OSS 120B on Groq. The model interprets the pilot's sentence and chooses an ordered subset of allowlisted site tools. The browser executes those actual WebMCP tools and shows every step moving from queued to executing to shared UI state, along with model token usage. Weather facts come from the application tools and data sources, not the model's memory.
 
 We also created a clearly labeled scenario mode. That makes the judging flow reproducible even when live weather changes or a source is temporarily unavailable. It never presents scenario values as live reports.
 
@@ -60,4 +60,4 @@ Longer term, the same approach could support pilot-defined personal minimums, in
 
 ## Built with
 
-WebMCP imperative API, React, JavaScript, HTML, CSS, Vite, Vitest, Playwright, Node.js, Vercel Functions, NOAA Aviation Weather Center API, Apple WeatherKit, Groq, GPT-OSS 20B, JSON Web Tokens, GitHub, Vercel
+WebMCP imperative API, React, JavaScript, HTML, CSS, Vite, Vitest, Playwright, Node.js, Vercel Functions, NOAA Aviation Weather Center API, Apple WeatherKit, Groq, GPT-OSS 120B, JSON Web Tokens, GitHub, Vercel
