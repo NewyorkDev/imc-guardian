@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { geoNaturalEarth1, geoPath } from "d3-geo";
+import { feature } from "topojson-client";
+import worldAtlas from "world-atlas/land-110m.json";
 import { createGuardianEngine } from "./engine.js";
 import { installWebMcp, toolDefinitions } from "./webmcp.js";
 import { airports, demoRoute, forecasts, observations } from "./scenario.js";
@@ -13,6 +16,17 @@ const routeDots = [
   { x: 47, y: 49, id: "KCTY" },
   { x: 79, y: 20, id: "KTLH" },
 ];
+const LIVE_CACHE_KEY = "imc-guardian-live-context-v2";
+const LIVE_CACHE_MS = 15 * 60 * 1000;
+const worldLand = feature(worldAtlas, worldAtlas.objects.land);
+const worldProjection = geoNaturalEarth1().fitExtent(
+  [
+    [28, 18],
+    [972, 482],
+  ],
+  worldLand,
+);
+const worldLandPath = geoPath(worldProjection)(worldLand);
 const categoryClass = (value) => value.toLowerCase();
 const formatCondition = (value = "Current") =>
   value.replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -36,6 +50,7 @@ function App() {
   const [mode, setMode] = useState("scenario");
   const [liveContext, setLiveContext] = useState(null);
   const [liveError, setLiveError] = useState("");
+  const [liveLoading, setLiveLoading] = useState(false);
   const [running, setRunning] = useState(false);
   const [watching, setWatching] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
@@ -73,13 +88,40 @@ function App() {
     window.setTimeout(() => {
       setRunning(false);
       document
-        .querySelector(".assessment")
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        .querySelector("#evidence")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const evidence = document.querySelector("#evidence");
+      evidence?.classList.add("attention-pulse");
+      window.setTimeout(
+        () => evidence?.classList.remove("attention-pulse"),
+        1800,
+      );
     }, 250);
+  };
+  const revealLiveSources = () => {
+    window.setTimeout(
+      () =>
+        document
+          .querySelector(".live-source-panel")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      80,
+    );
   };
   const loadLiveContext = async () => {
     setLiveError("");
+    setLiveLoading(true);
     try {
+      const cached = sessionStorage.getItem(LIVE_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - new Date(parsed.checkedAt).getTime() < LIVE_CACHE_MS) {
+          setLiveContext({ ...parsed, cache: "browser" });
+          setMode("live");
+          setLiveLoading(false);
+          revealLiveSources();
+          return;
+        }
+      }
       const [awcResponse, appleResponse] = await Promise.all([
         fetch("/api/weather?type=metar&ids=KTPF,KCTY,KTLH&format=json"),
         fetch("/api/weatherkit?scope=global"),
@@ -92,17 +134,23 @@ function App() {
         awcResponse.json(),
         appleResponse.json(),
       ]);
-      setLiveContext({
+      const context = {
         awcReports: Array.isArray(awc) ? awc.length : 0,
         reports: Array.isArray(awc) ? awc : [],
         appleAsOf: apple.samples?.[0]?.asOf || "available",
         weatherSamples: apple.samples || [],
         checkedAt: new Date().toISOString(),
-      });
+        cache: "network",
+      };
+      setLiveContext(context);
+      sessionStorage.setItem(LIVE_CACHE_KEY, JSON.stringify(context));
       setMode("live");
+      revealLiveSources();
     } catch (error) {
       setLiveError(error.message);
       setMode("scenario");
+    } finally {
+      setLiveLoading(false);
     }
   };
   const enableRouteWatch = async () => {
@@ -245,8 +293,16 @@ function App() {
                     : "Run Tampa → Tallahassee demo"}{" "}
                 <span>→</span>
               </button>
-              <button className="ghost" onClick={loadLiveContext}>
-                Check live sources
+              <button
+                className="ghost"
+                onClick={loadLiveContext}
+                disabled={liveLoading}
+              >
+                {liveLoading
+                  ? "Checking AWC + Apple..."
+                  : liveContext
+                    ? "Show live source comparison"
+                    : "Check live sources"}
               </button>
             </div>
             {assessment && (
@@ -256,8 +312,11 @@ function App() {
             )}
             {liveContext && (
               <p className="live-note">
-                Live: {liveContext.awcReports} AWC reports · Apple WeatherKit
-                updated {liveContext.appleAsOf}
+                Live sources loaded: {liveContext.awcReports} AWC reports and{" "}
+                {liveContext.weatherSamples.length} Apple WeatherKit locations.
+                {liveContext.cache === "browser"
+                  ? " Reused from this browser session."
+                  : " Cached in this browser for 15 minutes."}
               </p>
             )}
             {liveError && (
@@ -349,16 +408,27 @@ function App() {
                 <div className="live-source-grid">
                   {demoRoute.stations.map((id) => {
                     const report = liveReportsById[id];
+                    const scenarioCategory = airports[id].category;
+                    const liveCategory = report?.fltCat || "NO REPORT";
+                    const categoryChanged = scenarioCategory !== liveCategory;
                     const ageHours = report?.reportTime
                       ? (Date.now() - new Date(report.reportTime).getTime()) /
                         3600000
                       : Infinity;
                     return (
-                      <article key={id}>
-                        <span>{id}</span>
-                        <b className={categoryClass(report?.fltCat || "VFR")}>
-                          {report?.fltCat || "NO REPORT"}
-                        </b>
+                      <article
+                        key={id}
+                        className={categoryChanged ? "changed" : "unchanged"}
+                      >
+                        <div className="source-airport">
+                          <span>{id}</span>
+                          <b className={categoryClass(liveCategory)}>
+                            {liveCategory}
+                          </b>
+                        </div>
+                        <strong>
+                          SCENARIO {scenarioCategory} → LIVE {liveCategory}
+                        </strong>
                         <small>{formatObserved(report?.reportTime)}</small>
                         <em className={ageHours > 2 ? "stale" : ""}>
                           {ageHours > 2 ? "STALE REPORT" : "CURRENT REPORT"}
@@ -369,7 +439,8 @@ function App() {
                 </div>
                 <small className="live-source-boundary">
                   Source: Aviation Weather Center API. Obtain an official
-                  briefing before flight.
+                  briefing before flight. Browser cache: 15 minutes. Edge cache:
+                  60 seconds.
                 </small>
               </div>
             )}
@@ -404,7 +475,7 @@ function App() {
           </button>
         </section>
 
-        <section className="ai-console">
+        <section className="ai-console" id="ai-route-check">
           <div className="ai-intro">
             <p className="eyebrow">LIVE FREE AI + NATIVE WEBMCP</p>
             <h2>
@@ -418,6 +489,38 @@ function App() {
               weather evidence. The model cannot invent reports or authorize the
               flight.
             </p>
+            <div className="ai-route-plan">
+              <div className="route-plan-head">
+                <span>ROUTE BEING CHECKED</span>
+                <b>SEP 2 · 6:00 PM ET</b>
+              </div>
+              <div className="route-plan-track">
+                {demoRoute.stations.map((id, index) => (
+                  <React.Fragment key={id}>
+                    <div
+                      className={`route-plan-stop ${categoryClass(airports[id].category)}`}
+                    >
+                      <i />
+                      <span>
+                        <b>{id}</b>
+                        <small>{airports[id].city}</small>
+                        <em>{airports[id].category}</em>
+                      </span>
+                    </div>
+                    {index < demoRoute.stations.length - 1 && (
+                      <div className="route-plan-leg">
+                        <span>{index === 0 ? "83 NM" : "91 NM"}</span>
+                        <i />
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+              <footer>
+                <span>VFR · C172 · VFR-ONLY PILOT</span>
+                <b>EXPECTED PATH: VFR → MVFR → IFR</b>
+              </footer>
+            </div>
             <label>
               PILOT REQUEST
               <textarea
@@ -648,40 +751,41 @@ function App() {
               <div className="globe-grid" />
               <svg
                 className="world-outline"
-                viewBox="0 0 100 100"
+                viewBox="0 0 1000 500"
                 aria-hidden="true"
               >
-                <path d="M8 28 L15 18 27 17 35 24 33 33 27 37 24 48 18 52 14 43 7 38Z" />
-                <path d="M29 52 L37 55 42 66 38 83 31 75 27 62Z" />
-                <path d="M47 23 L55 18 66 21 72 17 90 24 96 34 89 43 78 42 73 51 64 47 59 38 50 36Z" />
-                <path d="M52 41 L62 43 68 55 63 73 55 78 49 66 47 52Z" />
-                <path d="M82 67 L94 69 97 80 88 85 80 77Z" />
+                <path d={worldLandPath} />
               </svg>
+              <div className="cloud-band band-one" />
+              <div className="cloud-band band-two" />
+              {liveContext?.weatherSamples?.map((sample) => {
+                const position = worldProjection([sample.lon, sample.lat]);
+                if (!position) return null;
+                const [x, y] = position;
+                return (
+                  <div
+                    key={sample.name}
+                    className={`weather-sample ${x > 740 ? "right-label" : ""}`}
+                    style={{
+                      left: `${x / 10}%`,
+                      top: `${y / 5}%`,
+                      "--cloud": Math.max(0.16, sample.cloudCover || 0),
+                    }}
+                  >
+                    <i />
+                    <span>
+                      <b>{sample.name}</b>
+                      <small>
+                        {formatCondition(sample.conditionCode)} ·{" "}
+                        {Math.round((sample.cloudCover || 0) * 100)}% cloud ·{" "}
+                        {Math.round(sample.temperature)}°C ·{" "}
+                        {Math.round(sample.windSpeed || 0)} km/h
+                      </small>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="cloud-band band-one" />
-            <div className="cloud-band band-two" />
-            {liveContext?.weatherSamples?.map((sample) => (
-              <div
-                key={sample.name}
-                className={`weather-sample ${sample.x > 74 ? "right-label" : ""}`}
-                style={{
-                  left: `${sample.x}%`,
-                  top: `${sample.y}%`,
-                  "--cloud": Math.max(0.16, sample.cloudCover || 0),
-                }}
-              >
-                <i />
-                <span>
-                  <b>{sample.name}</b>
-                  <small>
-                    {formatCondition(sample.conditionCode)} ·{" "}
-                    {Math.round((sample.cloudCover || 0) * 100)}% cloud ·{" "}
-                    {Math.round(sample.temperature)}°C ·{" "}
-                    {Math.round(sample.windSpeed || 0)} km/h
-                  </small>
-                </span>
-              </div>
-            ))}
             {!liveContext && (
               <button onClick={loadLiveContext}>
                 LOAD APPLE GLOBAL WEATHER <span>→</span>

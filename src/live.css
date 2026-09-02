@@ -75,6 +75,24 @@ button:disabled {
   border: 1px solid #354447;
   background: #101a1d;
 }
+.live-source-grid article.changed {
+  border-color: #ff9e7c;
+  box-shadow: inset 3px 0 #ff6b35;
+}
+.source-airport {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.live-source-grid article strong {
+  color: #fff;
+  font:
+    700 7px/1.4 "DM Mono",
+    monospace;
+}
+.live-source-grid article.unchanged strong {
+  color: #91a2a5;
+}
 
 .live-source-grid article span,
 .live-source-grid article small,

@@ -12,10 +12,13 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "d3-geo": "^3.1.1",
     "jsonwebtoken": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "vite": "latest"
+    "topojson-client": "^3.1.0",
+    "vite": "latest",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
