@@ -163,13 +163,6 @@
     0 0 0 7px rgba(180, 220, 234, 0.12),
     0 0 28px rgba(180, 220, 234, var(--cloud));
 }
-.weather-sample.route-sample > i {
-  background: #d7ff42;
-  border-color: #101a1d;
-  box-shadow:
-    0 0 0 7px #d7ff4230,
-    0 0 32px #d7ff4290;
-}
 .weather-sample span {
   position: absolute;
   left: 21px;
@@ -203,52 +196,6 @@
   font-weight: 800;
   cursor: pointer;
 }
-.flight-animation {
-  position: absolute;
-  left: 29%;
-  top: 41%;
-  width: 5%;
-  height: 40px;
-  border-top: 2px dashed #d7ff42;
-  transform: rotate(-28deg);
-  z-index: 4;
-}
-.flight-animation .plane {
-  position: absolute;
-  font-size: 27px;
-  top: -18px;
-  animation: fly-route 7s linear infinite;
-}
-.flight-animation b {
-  position: absolute;
-  top: 15px;
-  font:
-    500 8px "DM Mono",
-    monospace;
-  color: #d7ff42;
-}
-.ai-callout {
-  position: absolute;
-  right: 3%;
-  top: 5%;
-  z-index: 4;
-  width: 280px;
-  background: #f4f1e9;
-  color: #101a1d;
-  padding: 16px;
-  box-shadow: 8px 8px 0 #d7ff42;
-}
-.ai-callout small {
-  font:
-    700 8px "DM Mono",
-    monospace;
-  color: #687579;
-}
-.ai-callout p {
-  font-size: 12px;
-  line-height: 1.5;
-  margin: 8px 0 0;
-}
 .national-weather > footer {
   display: flex;
   justify-content: space-between;
@@ -257,19 +204,6 @@
     500 8px "DM Mono",
     monospace;
   padding-top: 13px;
-}
-@keyframes fly-route {
-  0% {
-    left: 0;
-    transform: rotate(4deg);
-  }
-  50% {
-    transform: rotate(-3deg);
-  }
-  100% {
-    left: 93%;
-    transform: rotate(4deg);
-  }
 }
 .route-watch {
   padding: 100px 4vw;
@@ -426,9 +360,6 @@
   .national-weather > footer span {
     display: block;
     margin-top: 7px;
-  }
-  .ai-callout {
-    width: 230px;
   }
   .condition .numbers {
     grid-template-columns: 1fr 1fr;

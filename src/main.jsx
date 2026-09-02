@@ -14,6 +14,8 @@ const routeDots = [
   { x: 79, y: 20, id: "KTLH" },
 ];
 const categoryClass = (value) => value.toLowerCase();
+const formatCondition = (value = "Current") =>
+  value.replace(/([a-z])([A-Z])/g, "$1 $2");
 const formatObserved = (value) => {
   if (!value) return "TIME UNAVAILABLE";
   const date = new Date(value);
@@ -625,7 +627,9 @@ function App() {
         <section className="national-weather">
           <div className="national-head">
             <div>
-              <p className="eyebrow">APPLE WEATHERKIT · LIVE ROUTE CORRIDOR</p>
+              <p className="eyebrow">
+                APPLE WEATHERKIT · LIVE GLOBAL CONDITIONS
+              </p>
               <h2>
                 A living weather layer,
                 <br />
@@ -634,9 +638,9 @@ function App() {
             </div>
             <p>
               Apple WeatherKit samples current cloud cover, precipitation, wind,
-              and temperature around the globe. Tampa to JFK stays highlighted
-              as one route inside the larger weather picture. Aviation Weather
-              Center remains the source for flight categories and advisories.
+              and temperature around the globe. This is a live environmental
+              view, while Aviation Weather Center remains the source for flight
+              categories and advisories.
             </p>
           </div>
           <div className="global-weather-map">
@@ -659,7 +663,7 @@ function App() {
             {liveContext?.weatherSamples?.map((sample) => (
               <div
                 key={sample.name}
-                className={`weather-sample ${sample.onRoute ? "route-sample" : ""} ${sample.x > 74 ? "right-label" : ""}`}
+                className={`weather-sample ${sample.x > 74 ? "right-label" : ""}`}
                 style={{
                   left: `${sample.x}%`,
                   top: `${sample.y}%`,
@@ -670,6 +674,7 @@ function App() {
                 <span>
                   <b>{sample.name}</b>
                   <small>
+                    {formatCondition(sample.conditionCode)} ·{" "}
                     {Math.round((sample.cloudCover || 0) * 100)}% cloud ·{" "}
                     {Math.round(sample.temperature)}°C ·{" "}
                     {Math.round(sample.windSpeed || 0)} km/h
@@ -682,18 +687,6 @@ function App() {
                 LOAD APPLE GLOBAL WEATHER <span>→</span>
               </button>
             )}
-            <div className="flight-animation">
-              <span className="plane">✈</span>
-              <i />
-              <b>KTPA → KJFK</b>
-            </div>
-            <div className="ai-callout">
-              <small>SECOND PAIR OF EYES</small>
-              <p>
-                “Conditions are changing farther north. Want me to keep watching
-                the Tampa to JFK corridor?”
-              </p>
-            </div>
           </div>
           <footer>
             <span>Weather data provided by Apple WeatherKit</span>
