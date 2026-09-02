@@ -14,6 +14,18 @@ const routeDots = [
   { x: 79, y: 20, id: "KTLH" },
 ];
 const categoryClass = (value) => value.toLowerCase();
+const formatObserved = (value) => {
+  if (!value) return "TIME UNAVAILABLE";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "TIME UNAVAILABLE";
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+};
 
 function App() {
   const engine = useMemo(() => createGuardianEngine(), []);
@@ -68,7 +80,7 @@ function App() {
     try {
       const [awcResponse, appleResponse] = await Promise.all([
         fetch("/api/weather?type=metar&ids=KTPF,KCTY,KTLH&format=json"),
-        fetch("/api/weatherkit?scope=tpa-jfk"),
+        fetch("/api/weatherkit?scope=global"),
       ]);
       if (!awcResponse.ok || !appleResponse.ok)
         throw new Error(
@@ -80,8 +92,10 @@ function App() {
       ]);
       setLiveContext({
         awcReports: Array.isArray(awc) ? awc.length : 0,
+        reports: Array.isArray(awc) ? awc : [],
         appleAsOf: apple.samples?.[0]?.asOf || "available",
         weatherSamples: apple.samples || [],
+        checkedAt: new Date().toISOString(),
       });
       setMode("live");
     } catch (error) {
@@ -174,6 +188,12 @@ function App() {
     installWebMcp(engine, () => redraw((n) => n + 1)).then(setNativeCount);
   }, [engine]);
   const assessment = state.assessment;
+  const validatedAlert = state.events.findLast?.(
+    (event) => event.name === "validate_weather_alert",
+  )?.output;
+  const liveReportsById = Object.fromEntries(
+    (liveContext?.reports || []).map((report) => [report.icaoId, report]),
+  );
   const alternates =
     state.events.findLast?.((event) => event.name === "find_safer_alternates")
       ?.output.alternates || [];
@@ -262,22 +282,31 @@ function App() {
               <svg viewBox="0 0 100 100" preserveAspectRatio="none">
                 <path d="M16 77 C36 67, 56 38, 79 20" />
               </svg>
-              {routeDots.map((dot, index) => (
-                <div
-                  key={dot.id}
-                  className={`airport-dot ${categoryClass(airports[dot.id].category)}`}
-                  style={{ left: `${dot.x}%`, top: `${dot.y}%` }}
-                >
-                  <i />
-                  <label>
-                    {dot.id}
-                    <small>{airports[dot.id].category}</small>
-                  </label>
-                  {index < 2 && (
-                    <span className="leg">{index ? "91 NM" : "83 NM"}</span>
-                  )}
-                </div>
-              ))}
+              {routeDots.map((dot, index) =>
+                (() => {
+                  const liveReport = liveReportsById[dot.id];
+                  const displayCategory =
+                    mode === "live" && liveReport?.fltCat
+                      ? liveReport.fltCat
+                      : airports[dot.id].category;
+                  return (
+                    <div
+                      key={dot.id}
+                      className={`airport-dot ${categoryClass(displayCategory)}`}
+                      style={{ left: `${dot.x}%`, top: `${dot.y}%` }}
+                    >
+                      <i />
+                      <label>
+                        {dot.id}
+                        <small>{displayCategory}</small>
+                      </label>
+                      {index < 2 && (
+                        <span className="leg">{index ? "91 NM" : "83 NM"}</span>
+                      )}
+                    </div>
+                  );
+                })(),
+              )}
               <div className="gairmet">
                 G-AIRMET IFR
                 <br />
@@ -301,6 +330,43 @@ function App() {
                 Scenario data, timestamped for judging
               </span>
             </div>
+            {liveContext && (
+              <div className="live-source-panel">
+                <div className="live-source-head">
+                  <span>LIVE SOURCE CHECK</span>
+                  <b>{formatObserved(liveContext.checkedAt)}</b>
+                </div>
+                <p>
+                  Live reports are shown separately from the reproducible
+                  deterioration scenario. They do not validate the scenario.
+                </p>
+                <div className="live-source-grid">
+                  {demoRoute.stations.map((id) => {
+                    const report = liveReportsById[id];
+                    const ageHours = report?.reportTime
+                      ? (Date.now() - new Date(report.reportTime).getTime()) /
+                        3600000
+                      : Infinity;
+                    return (
+                      <article key={id}>
+                        <span>{id}</span>
+                        <b className={categoryClass(report?.fltCat || "VFR")}>
+                          {report?.fltCat || "NO REPORT"}
+                        </b>
+                        <small>{formatObserved(report?.reportTime)}</small>
+                        <em>
+                          {ageHours > 2 ? "STALE REPORT" : "CURRENT REPORT"}
+                        </em>
+                      </article>
+                    );
+                  })}
+                </div>
+                <small className="live-source-boundary">
+                  Source: Aviation Weather Center API. Obtain an official
+                  briefing before flight.
+                </small>
+              </div>
+            )}
           </div>
         </section>
 
@@ -432,13 +498,46 @@ function App() {
               )}
             </div>
             {aiRun.status === "complete" && (
-              <div className="ai-result">
-                <b>AI PLAN COMPLETE · PILOT DECISION STILL REQUIRED</b>
-                <span>
-                  {aiRun.usage?.total_tokens
-                    ? `${aiRun.usage.total_tokens} model tokens`
-                    : "usage reported by provider"}
-                </span>
+              <div className="ai-outcome">
+                <div className="ai-outcome-head">
+                  <span>ROUTE CHECK OUTCOME</span>
+                  <b className="high">{assessment?.level || "REVIEW"}</b>
+                </div>
+                <h3>
+                  {assessment?.headline ||
+                    "The requested WebMCP checks completed."}
+                </h3>
+                <p>
+                  {assessment?.worstCondition ||
+                    "Review the structured results below before making a decision."}
+                </p>
+                {assessment?.factors?.length > 0 && (
+                  <ul>
+                    {assessment.factors.map((factor) => (
+                      <li key={factor}>{factor}</li>
+                    ))}
+                  </ul>
+                )}
+                <div className="ai-outcome-next">
+                  <b>NEXT REVIEW</b>
+                  <span>
+                    {assessment?.recommendation ||
+                      "Inspect the evidence and official sources."}
+                  </span>
+                </div>
+                {validatedAlert?.validated && (
+                  <div className="ai-validation">
+                    ✓ SECOND PAIR OF EYES VALIDATED THE DEMO ALERT
+                  </div>
+                )}
+                <footer>
+                  <strong>PILOT DECISION REQUIRED</strong>
+                  <span>
+                    {aiRun.usage?.total_tokens
+                      ? `${aiRun.usage.total_tokens} model tokens`
+                      : "deterministic fallback used"}
+                  </span>
+                </footer>
               </div>
             )}
             {aiRun.error && (
@@ -524,25 +623,39 @@ function App() {
             <div>
               <p className="eyebrow">APPLE WEATHERKIT · LIVE ROUTE CORRIDOR</p>
               <h2>
-                Tampa to JFK,
+                A living weather layer,
                 <br />
-                weather changing ahead.
+                beyond one route.
               </h2>
             </div>
             <p>
-              WeatherKit samples current cloud cover, precipitation, wind, and
-              temperature along nine points from Tampa to JFK. Aviation Weather
-              Center data remains the source for flight categories and advisories.
+              Apple WeatherKit samples current cloud cover, precipitation, wind,
+              and temperature around the globe. Tampa to JFK stays highlighted
+              as one route inside the larger weather picture. Aviation Weather
+              Center remains the source for flight categories and advisories.
             </p>
           </div>
-          <div className="us-weather-map">
-            <div className="usa-shape">EAST COAST</div>
+          <div className="global-weather-map">
+            <div className="globe-shell">
+              <div className="globe-grid" />
+              <svg
+                className="world-outline"
+                viewBox="0 0 100 100"
+                aria-hidden="true"
+              >
+                <path d="M8 28 L15 18 27 17 35 24 33 33 27 37 24 48 18 52 14 43 7 38Z" />
+                <path d="M29 52 L37 55 42 66 38 83 31 75 27 62Z" />
+                <path d="M47 23 L55 18 66 21 72 17 90 24 96 34 89 43 78 42 73 51 64 47 59 38 50 36Z" />
+                <path d="M52 41 L62 43 68 55 63 73 55 78 49 66 47 52Z" />
+                <path d="M82 67 L94 69 97 80 88 85 80 77Z" />
+              </svg>
+            </div>
             <div className="cloud-band band-one" />
             <div className="cloud-band band-two" />
             {liveContext?.weatherSamples?.map((sample) => (
               <div
                 key={sample.name}
-                className="weather-sample"
+                className={`weather-sample ${sample.onRoute ? "route-sample" : ""}`}
                 style={{
                   left: `${sample.x}%`,
                   top: `${sample.y}%`,
@@ -554,14 +667,15 @@ function App() {
                   <b>{sample.name}</b>
                   <small>
                     {Math.round((sample.cloudCover || 0) * 100)}% cloud ·{" "}
-                    {Math.round(sample.temperature)}°C
+                    {Math.round(sample.temperature)}°C ·{" "}
+                    {Math.round(sample.windSpeed || 0)} km/h
                   </small>
                 </span>
               </div>
             ))}
             {!liveContext && (
               <button onClick={loadLiveContext}>
-                LOAD LIVE TAMPA → JFK WEATHER <span>→</span>
+                LOAD APPLE GLOBAL WEATHER <span>→</span>
               </button>
             )}
             <div className="flight-animation">
@@ -581,8 +695,8 @@ function App() {
             <span>Weather data provided by Apple WeatherKit</span>
             <span>
               {liveContext
-                ? `9 LIVE ROUTE POINTS · ${new Date(liveContext.appleAsOf).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
-                : "LIVE LAYER LOADS ON REQUEST"}
+                ? `${liveContext.weatherSamples.length} LIVE GLOBAL POINTS · ${new Date(liveContext.appleAsOf).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                : "GLOBAL LAYER LOADS ON REQUEST"}
             </span>
           </footer>
         </section>
@@ -615,9 +729,13 @@ function App() {
             <label>
               TRIGGER WHEN
               <select defaultValue="ceiling">
-                <option value="ceiling">Ceiling crosses 1,500 FT threshold</option>
+                <option value="ceiling">
+                  Ceiling crosses 1,500 FT threshold
+                </option>
                 <option value="category">Flight category worsens</option>
-                <option value="visibility">Visibility crosses 5 SM threshold</option>
+                <option value="visibility">
+                  Visibility crosses 5 SM threshold
+                </option>
                 <option value="advisory">New advisory intersects route</option>
               </select>
             </label>
@@ -645,7 +763,9 @@ function App() {
                   </p>
                 </div>
                 <strong>✓ DOUBLE-CHECKED BY WEBMCP</strong>
-                <small>Threshold crossing · TAF context · advisory context</small>
+                <small>
+                  Threshold crossing · TAF context · advisory context
+                </small>
                 <strong>AVIATION ATTENTION CUE</strong>
                 <small>
                   Aviate first. Review when workload permits. Contact ATC or

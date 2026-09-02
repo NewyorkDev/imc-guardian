@@ -26,9 +26,12 @@ export default async function handler(request, response) {
     return response.status(400).json({ error: "A pilot request is required." });
   const system = `You are the natural-language planner inside IMC Guardian, a clearly labeled aviation decision-support prototype. You do not invent weather, issue a clearance, say a flight is safe, or make a go/no-go decision. Choose an ordered subset of these site-owned WebMCP tools: ${ALLOWED_TOOLS.join(", ")}. For the standard KTPF to KTLH VFR request, include route context, airport conditions, advisories, assessment, alternates, and comparison. If the user asks for monitoring, include configure_route_watch, check_route_changes, and validate_weather_alert in that order. Return strict JSON with keys interpretation (string), toolPlan (array of allowed tool names), and pilotMessage (short string that says the site tools will supply evidence and the pilot decides).`;
   const safePlan = () => {
-    const monitoring = /monitor|watch|alert|notify|change|deteriorat/i.test(prompt);
+    const monitoring = /monitor|watch|alert|notify|change|deteriorat/i.test(
+      prompt,
+    );
     return {
-      interpretation: "Check the route, surface the weather evidence, compare options, and leave the operational decision to the pilot.",
+      interpretation:
+        "Check the route, surface the weather evidence, compare options, and leave the operational decision to the pilot.",
       toolPlan: [
         "set_flight_context",
         "check_airport_conditions",
@@ -60,14 +63,17 @@ export default async function handler(request, response) {
         max_completion_tokens: 500,
       };
       if (strictJson) requestBody.response_format = { type: "json_object" };
-      const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
+      const upstream = await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody),
-      });
+      );
       return { upstream, payload: await upstream.json() };
     };
     const attempts = [
@@ -106,21 +112,41 @@ export default async function handler(request, response) {
     plan.toolPlan = (Array.isArray(plan.toolPlan) ? plan.toolPlan : []).filter(
       (name) => ALLOWED_TOOLS.includes(name),
     );
+    const asksForRouteCheck =
+      /check|assess|weather|route|flying|flight|vfr|ifr/i.test(prompt);
+    const asksForMonitoring =
+      /monitor|watch|alert|notify|change|deteriorat/i.test(prompt);
+    const requiredPlan = [
+      ...(asksForRouteCheck
+        ? [
+            "set_flight_context",
+            "check_airport_conditions",
+            "check_route_advisories",
+            "assess_route_weather",
+            "find_safer_alternates",
+            "compare_route_options",
+          ]
+        : []),
+      ...(asksForMonitoring
+        ? [
+            "configure_route_watch",
+            "check_route_changes",
+            "validate_weather_alert",
+          ]
+        : []),
+    ];
+    plan.toolPlan = [...new Set([...requiredPlan, ...plan.toolPlan])];
     response.setHeader("Cache-Control", "no-store");
-    return response
-      .status(200)
-      .json({
-        provider: "Groq",
-        model: payload.model || "Groq hosted open-weight model",
-        usage: payload.usage || null,
-        ...plan,
-      });
+    return response.status(200).json({
+      provider: "Groq",
+      model: payload.model || "Groq hosted open-weight model",
+      usage: payload.usage || null,
+      ...plan,
+    });
   } catch (error) {
-    return response
-      .status(502)
-      .json({
-        error: "The free AI planning demo could not complete.",
-        detail: error.message,
-      });
+    return response.status(502).json({
+      error: "The free AI planning demo could not complete.",
+      detail: error.message,
+    });
   }
 }
