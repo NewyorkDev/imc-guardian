@@ -354,7 +354,7 @@ function App() {
                           {report?.fltCat || "NO REPORT"}
                         </b>
                         <small>{formatObserved(report?.reportTime)}</small>
-                        <em>
+                        <em className={ageHours > 2 ? "stale" : ""}>
                           {ageHours > 2 ? "STALE REPORT" : "CURRENT REPORT"}
                         </em>
                       </article>
@@ -655,7 +655,7 @@ function App() {
             {liveContext?.weatherSamples?.map((sample) => (
               <div
                 key={sample.name}
-                className={`weather-sample ${sample.onRoute ? "route-sample" : ""}`}
+                className={`weather-sample ${sample.onRoute ? "route-sample" : ""} ${sample.x > 74 ? "right-label" : ""}`}
                 style={{
                   left: `${sample.x}%`,
                   top: `${sample.y}%`,

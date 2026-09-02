@@ -179,6 +179,11 @@
     500 9px "DM Mono",
     monospace;
 }
+.weather-sample.right-label span {
+  left: auto;
+  right: 21px;
+  text-align: right;
+}
 .weather-sample small {
   display: block;
   color: #9fb1b5;

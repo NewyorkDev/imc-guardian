@@ -3,7 +3,9 @@
   max-width: 570px;
   margin: 14px 0 0;
   padding: 9px 11px;
-  font: 500 9px/1.5 "DM Mono", monospace;
+  font:
+    500 9px/1.5 "DM Mono",
+    monospace;
 }
 
 .run-success {
@@ -12,7 +14,9 @@
   padding: 9px 11px;
   color: #236330;
   background: #e7f7d1;
-  font: 500 9px/1.5 "DM Mono", monospace;
+  font:
+    500 9px/1.5 "DM Mono",
+    monospace;
 }
 
 button:disabled {
@@ -40,11 +44,15 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  font: 600 8px "DM Mono", monospace;
+  font:
+    600 8px "DM Mono",
+    monospace;
   letter-spacing: 0.12em;
 }
 
-.live-source-head b { color: #d7ff42; }
+.live-source-head b {
+  color: #d7ff42;
+}
 
 .live-source-panel > p {
   max-width: 640px;
@@ -72,7 +80,9 @@ button:disabled {
 .live-source-grid article small,
 .live-source-grid article em,
 .live-source-boundary {
-  font: 500 7px/1.4 "DM Mono", monospace;
+  font:
+    500 7px/1.4 "DM Mono",
+    monospace;
 }
 
 .live-source-grid article b {
@@ -80,16 +90,38 @@ button:disabled {
   padding: 3px 5px;
   background: #d6efdc;
   color: #19743b;
-  font: 700 8px "DM Mono", monospace;
+  font:
+    700 8px "DM Mono",
+    monospace;
 }
 
-.live-source-grid article b.mvfr { background: #dbe8ff; color: #245fa8; }
+.live-source-grid article b.mvfr {
+  background: #dbe8ff;
+  color: #245fa8;
+}
 .live-source-grid article b.ifr,
-.live-source-grid article b.lifr { background: #fee0d8; color: #a92817; }
-.live-source-grid article small { color: #aebbbd; }
-.live-source-grid article em { color: #d7ff42; font-style: normal; }
-.live-source-boundary { display: block; margin-top: 12px; color: #91a2a5; }
+.live-source-grid article b.lifr {
+  background: #fee0d8;
+  color: #a92817;
+}
+.live-source-grid article small {
+  color: #aebbbd;
+}
+.live-source-grid article em {
+  color: #d7ff42;
+  font-style: normal;
+}
+.live-source-grid article em.stale {
+  color: #ff9e7c;
+}
+.live-source-boundary {
+  display: block;
+  margin-top: 12px;
+  color: #91a2a5;
+}
 
 @media (max-width: 700px) {
-  .live-source-grid { grid-template-columns: 1fr; }
+  .live-source-grid {
+    grid-template-columns: 1fr;
+  }
 }
