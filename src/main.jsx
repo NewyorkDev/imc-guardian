@@ -580,7 +580,7 @@ function App() {
         <section className="route-watch">
           <div>
             <p className="eyebrow">DEMO NOTIFICATIONS · PILOT CONTROLLED</p>
-            <h2>Watch the route without pretending to fly the airplane.</h2>
+            <h2>Stay ahead of a changing route.</h2>
             <p>
               IMC Guardian can monitor material changes to ceilings, visibility,
               advisories, and alternate conditions. Alerts remain short and
