@@ -26,28 +26,29 @@ export default async function handler(request, response) {
     return response.status(400).json({ error: "A pilot request is required." });
   const system = `You are the natural-language planner inside IMC Guardian, a clearly labeled aviation decision-support prototype. You do not invent weather, issue a clearance, say a flight is safe, or make a go/no-go decision. Choose an ordered subset of these site-owned WebMCP tools: ${ALLOWED_TOOLS.join(", ")}. For the standard KTPF to KTLH VFR request, include route context, airport conditions, advisories, assessment, alternates, and comparison. If the user asks for monitoring, include configure_route_watch, check_route_changes, and validate_weather_alert in that order. Return strict JSON with keys interpretation (string), toolPlan (array of allowed tool names), and pilotMessage (short string that says the site tools will supply evidence and the pilot decides).`;
   try {
-    const runModel = async (model) => {
+    const runModel = async (model, strictJson = true) => {
+      const requestBody = {
+        model,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.1,
+        max_completion_tokens: 500,
+      };
+      if (strictJson) requestBody.response_format = { type: "json_object" };
       const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "system", content: system },
-            { role: "user", content: prompt },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.1,
-          max_completion_tokens: 500,
-        }),
+        body: JSON.stringify(requestBody),
       });
       return { upstream, payload: await upstream.json() };
     };
-    let { upstream, payload } = await runModel("openai/gpt-oss-20b");
-    if (!upstream.ok) ({ upstream, payload } = await runModel("llama-3.1-8b-instant"));
+    let { upstream, payload } = await runModel("openai/gpt-oss-120b");
+    if (!upstream.ok) ({ upstream, payload } = await runModel("openai/gpt-oss-20b"));
     if (!upstream.ok) return response.status(upstream.status).json({ error: "Free model is temporarily unavailable.", detail: payload.error?.message || "Unknown model error" });
     const content = payload.choices?.[0]?.message?.content || "{}";
     const jsonText = content.match(/\{[\s\S]*\}/)?.[0] || "{}";
