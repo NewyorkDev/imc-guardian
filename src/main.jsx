@@ -308,9 +308,11 @@ function App() {
                 })(),
               )}
               <div className="gairmet">
-                G-AIRMET IFR
+                {mode === "live" ? "DEMO G-AIRMET IFR" : "G-AIRMET IFR"}
                 <br />
-                <small>NORTHERN CORRIDOR</small>
+                <small>
+                  {mode === "live" ? "SCENARIO ONLY" : "NORTHERN CORRIDOR"}
+                </small>
               </div>
             </div>
             <div className="legend">
@@ -327,7 +329,9 @@ function App() {
                 IFR
               </span>
               <span className="source">
-                Scenario data, timestamped for judging
+                {mode === "live"
+                  ? "Airport labels: live AWC · advisory: scenario"
+                  : "Scenario data, timestamped for judging"}
               </span>
             </div>
             {liveContext && (
