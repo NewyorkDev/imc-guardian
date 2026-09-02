@@ -1,0 +1,11 @@
+# Judge testing instructions
+
+1. Open the live URL in ChatGPT's in-app browser or Google Chrome with WebMCP enabled.
+2. Ask: "I am flying VFR from KTPF to KTLH at 6 PM in a C172. Check my route."
+3. The agent should set the flight context, inspect three airport conditions, identify the destination IFR condition and deteriorating northern corridor, and show the overlapping G-AIRMET IFR scenario.
+4. Ask for comparatively better nearby alternates. The tool should return KOCF, KGNV, and KVDF as VFR stations in the reproducible scenario, with an explicit warning that this is not a landing-suitability determination.
+5. Ask: "What changes if I delay, choose an alternate, or cancel?" The response should compare the options but leave `preferred` empty and require the pilot's choice.
+6. Ask it to record "delay". The response should log the human decision while stating that it does not authorize or clear a flight.
+7. Open the Live WebMCP Trace to inspect the structured inputs, outputs, provenance, limitations, and safety boundary.
+
+No credentials are required for scenario mode. The live-source button uses server-side NOAA Aviation Weather Center and Apple WeatherKit connections. Live data is supplemental to the reproducible judging scenario and must not be interpreted as an official briefing.

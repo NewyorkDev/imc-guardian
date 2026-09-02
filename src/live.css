@@ -1,0 +1,17 @@
+.live-note,
+.live-error {
+  max-width: 570px;
+  margin: 14px 0 0;
+  padding: 9px 11px;
+  font: 500 9px/1.5 "DM Mono", monospace;
+}
+
+.live-note {
+  color: #236330;
+  background: #dff0d8;
+}
+
+.live-error {
+  color: #8e2c19;
+  background: #fee4dc;
+}

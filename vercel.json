@@ -1,0 +1,4 @@
+{
+  "rewrites": [{ "source": "/api/weather", "destination": "/api/weather" }],
+  "headers": [{ "source": "/(.*)", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }] }]
+}
