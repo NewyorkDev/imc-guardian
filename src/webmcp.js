@@ -6,6 +6,9 @@ export const toolDefinitions = [
   ['find_safer_alternates', 'Find nearby airports with comparatively better reported conditions. Results do not establish airport or landing suitability.', {}, []],
   ['compare_route_options', 'Compare continuing, delaying, or choosing an alternate and require the pilot to make the decision.', {}, []],
   ['explain_imc_risk', 'Explain VFR into IMC and spatial-disorientation risk in plain language with strong limitations.', {}, []],
+  ['configure_route_watch', 'Configure a demo route watch for material weather changes. This is an attention aid, not guaranteed monitoring or an operational flight service.', { trigger: { type: 'string', enum: ['flight_category_worsens', 'ceiling_below_minimum', 'new_route_advisory'] }, delivery: { type: 'string', enum: ['in_app', 'browser'] } }, ['trigger']],
+  ['check_route_changes', 'Check the watched route for a material scenario change and return evidence, source context, and a workload-aware attention cue. This never directs a maneuver.', {}, []],
+  ['acknowledge_weather_alert', 'Acknowledge that a displayed weather attention cue was seen. This does not resolve the condition or authorize a flight action.', { alertId: { type: 'string' } }, ['alertId']],
   ['record_pilot_decision', 'Record the pilot’s explicit choice for the demo. This never authorizes, dispatches, files, or clears a flight.', { choice: { type: 'string', enum: ['delay', 'alternate', 'cancel', 'continue_after_official_briefing'] } }, ['choice']]
 ];
 

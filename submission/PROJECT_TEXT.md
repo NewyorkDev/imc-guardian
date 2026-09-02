@@ -8,7 +8,7 @@ Character count: 178
 
 ## About the project
 
-IMC Guardian is an aviation weather decision-support prototype. A pilot can enter a proposed route and ask an AI to check the weather. Eight WebMCP tools give the agent structured access to the route, airport observations, forecasts, advisories, risk factors, nearby alternates, and decision options.
+IMC Guardian is an aviation weather decision-support prototype. A pilot can enter a proposed route and ask an AI to check the weather. Eleven WebMCP tools give the agent structured access to the route, airport observations, forecasts, advisories, risk factors, nearby alternates, route-watch notifications, and decision options.
 
 The application does not tell a pilot that a flight is safe, issue a clearance, or replace an official weather briefing. It makes the evidence and pressure points easier to see so the pilot can make a more informed decision.
 
@@ -26,11 +26,13 @@ The agent can inspect the airport evidence, explain why the route risk increased
 
 ## How we built it
 
-We built a React and Vite application with a deterministic aviation-risk engine and eight imperative WebMCP tools registered through `document.modelContext.registerTool`. The user interface and the agent share the same route, assessment, alternatives, decision, and live tool trace.
+We built a React and Vite application with a deterministic aviation-risk engine and eleven imperative WebMCP tools registered through `document.modelContext.registerTool`. The user interface and the agent share the same route, assessment, alternatives, route watch, notifications, decision, and live tool trace.
 
 NOAA Aviation Weather Center is the aviation-data foundation. Because its API does not permit browser cross-origin requests, the project uses a scoped Vercel server-side proxy with caching and a custom user agent. Apple WeatherKit is wired as a second server-side source for supplemental general weather context such as precipitation, wind, visibility trends, and alerts. The WeatherKit signing credentials never enter the browser bundle.
 
 We also created a clearly labeled scenario mode. That makes the judging flow reproducible even when live weather changes or a source is temporarily unavailable. It never presents scenario values as live reports.
+
+The pilot can enable a demo route watch for a worsening flight category, a ceiling below a personal minimum, or a new advisory intersecting the route. WebMCP exposes the setup, the detected change, and alert acknowledgment as separate auditable tools. The alert follows the cockpit priority of aviate, navigate, communicate and never directs a maneuver.
 
 ## Challenges
 

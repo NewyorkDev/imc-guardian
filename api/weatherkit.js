@@ -26,19 +26,18 @@ export default async function handler(request, response) {
       if (!upstream.ok) throw new Error(`WeatherKit returned ${upstream.status}`);
       return upstream.json();
     };
-    if (request.query.scope === 'us') {
+    if (request.query.scope === 'tpa-jfk') {
       const points = [
-        ['Seattle', 47.61, -122.33, 8, 13], ['San Francisco', 37.77, -122.42, 10, 49], ['Los Angeles', 34.05, -118.24, 16, 76],
-        ['Denver', 39.74, -104.99, 40, 42], ['Dallas', 32.78, -96.8, 51, 71], ['Minneapolis', 44.98, -93.27, 56, 24],
-        ['Chicago', 41.88, -87.63, 65, 37], ['New Orleans', 29.95, -90.07, 65, 82], ['Miami', 25.76, -80.19, 86, 88],
-        ['Atlanta', 33.75, -84.39, 75, 66], ['New York', 40.71, -74.01, 91, 35], ['Boston', 42.36, -71.06, 96, 25]
+        ['Tampa', 27.98, -82.53, 17, 85], ['Jacksonville', 30.49, -81.69, 28, 76], ['Savannah', 32.08, -81.1, 37, 67],
+        ['Charleston', 32.9, -80.04, 45, 61], ['Raleigh', 35.88, -78.79, 54, 50], ['Richmond', 37.51, -77.32, 62, 42],
+        ['Washington', 38.85, -77.04, 70, 34], ['Philadelphia', 39.87, -75.24, 80, 25], ['JFK', 40.64, -73.78, 90, 16]
       ];
       const samples = await Promise.all(points.map(async ([name, lat, lon, x, y]) => {
         const current = (await fetchPoint(lat, lon)).currentWeather;
         return { name, lat, lon, x, y, asOf: current.asOf, conditionCode: current.conditionCode, cloudCover: current.cloudCover, precipitationIntensity: current.precipitationIntensity, temperature: current.temperature, windSpeed: current.windSpeed, windDirection: current.windDirection };
       }));
-      response.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=900');
-      return response.status(200).json({ attribution: 'Weather data provided by Apple WeatherKit', samples });
+      response.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=1800');
+      return response.status(200).json({ attribution: 'Weather data provided by Apple WeatherKit', route: 'KTPA-KJFK', samples });
     }
     const lat = Number(request.query.lat);
     const lon = Number(request.query.lon);

@@ -27,8 +27,11 @@ try {
     const alternates = await call('find_safer_alternates');
     const options = await call('compare_route_options');
     const explanation = await call('explain_imc_risk');
+    const watch = await call('configure_route_watch', { trigger: 'flight_category_worsens', delivery: 'in_app' });
+    const change = await call('check_route_changes');
+    const acknowledgment = await call('acknowledge_weather_alert', { alertId: change.alert.id });
     const decision = await call('record_pilot_decision', { choice: 'delay' });
-    return { toolNames: tools.map(tool => tool.name).sort(), context, conditions, advisories, assessment, alternates, options, explanation, decision };
+    return { toolNames: tools.map(tool => tool.name).sort(), context, conditions, advisories, assessment, alternates, options, explanation, watch, change, acknowledgment, decision };
   });
   await page.screenshot({ path: new URL('../artifacts/gallery/01-home-route.png', import.meta.url).pathname });
   await page.locator('.assessment').scrollIntoViewIfNeeded();
@@ -40,8 +43,8 @@ try {
   const artifact = { schemaVersion: 1, generatedAt: new Date().toISOString(), url, browser: 'Google Chrome with WebMCP enabled', ...result };
   await writeFile(new URL('../artifacts/native-webmcp-verification.json', import.meta.url), `${JSON.stringify(artifact, null, 2)}\n`);
   if (pageErrors.length) throw new Error(pageErrors.join(' | '));
-  if (result.toolNames.length !== 8 || result.assessment.level !== 'HIGH' || result.assessment.goNoGo !== null || result.alternates.alternates.length !== 3 || result.options.preferred !== null || !result.options.requiresPilotChoice || result.decision.choice !== 'delay') process.exitCode = 1;
-  console.log(JSON.stringify({ tools: result.toolNames.length, risk: result.assessment.level, goNoGo: result.assessment.goNoGo, alternates: result.alternates.alternates.length, requiresPilotChoice: result.options.requiresPilotChoice, recordedDecision: result.decision.choice }, null, 2));
+  if (result.toolNames.length !== 11 || result.assessment.level !== 'HIGH' || result.assessment.goNoGo !== null || result.alternates.alternates.length !== 3 || result.options.preferred !== null || !result.options.requiresPilotChoice || !result.watch.active || result.change.alert.pilotAction !== null || !result.acknowledgment.acknowledged || result.decision.choice !== 'delay') process.exitCode = 1;
+  console.log(JSON.stringify({ tools: result.toolNames.length, risk: result.assessment.level, goNoGo: result.assessment.goNoGo, alternates: result.alternates.alternates.length, requiresPilotChoice: result.options.requiresPilotChoice, routeWatch: result.watch.active, alertDirectsAction: result.change.alert.pilotAction, alertAcknowledged: result.acknowledgment.acknowledged, recordedDecision: result.decision.choice }, null, 2));
 } finally {
   await browser.close();
 }
