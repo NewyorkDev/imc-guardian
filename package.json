@@ -7,16 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "test": "vitest run",
+    "verify:native": "node scripts/verify-native.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
     "jsonwebtoken": "latest",
-    "vite": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "vite": "latest"
   },
   "devDependencies": {
+    "playwright": "^1.62.1",
     "vitest": "latest"
   }
 }

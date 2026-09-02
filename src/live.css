@@ -6,6 +6,19 @@
   font: 500 9px/1.5 "DM Mono", monospace;
 }
 
+.run-success {
+  max-width: 570px;
+  margin: 14px 0 0;
+  padding: 9px 11px;
+  color: #236330;
+  background: #e7f7d1;
+  font: 500 9px/1.5 "DM Mono", monospace;
+}
+
+button:disabled {
+  cursor: progress;
+}
+
 .live-note {
   color: #236330;
   background: #dff0d8;

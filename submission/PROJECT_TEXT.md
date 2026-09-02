@@ -4,7 +4,7 @@
 
 IMC Guardian lets a pilot ask AI to inspect a VFR route, explain deteriorating weather and compare alternatives through WebMCP while keeping every flight decision with the pilot.
 
-Character count: 173
+Character count: 178
 
 ## About the project
 
