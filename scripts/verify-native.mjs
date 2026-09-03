@@ -35,12 +35,13 @@ try {
     return { toolNames: tools.map(tool => tool.name).sort(), context, conditions, advisories, assessment, alternates, options, explanation, watch, change, validation, acknowledgment, decision };
   });
   await page.screenshot({ path: new URL('../artifacts/gallery/01-home-route.png', import.meta.url).pathname });
+  await page.getByRole('button', { name: 'Route weather', exact: true }).click();
   await page.locator('.assessment').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: new URL('../artifacts/gallery/02-assessment-evidence.png', import.meta.url).pathname });
+  await page.locator('.assessment').screenshot({ path: new URL('../artifacts/gallery/02-assessment-evidence.png', import.meta.url).pathname });
   await page.locator('.decision').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: new URL('../artifacts/gallery/03-human-decision.png', import.meta.url).pathname });
-  await page.locator('.trace').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: new URL('../artifacts/gallery/04-webmcp-trace.png', import.meta.url).pathname });
+  await page.locator('.decision').screenshot({ path: new URL('../artifacts/gallery/03-human-decision.png', import.meta.url).pathname });
+  await page.getByRole('button', { name: 'WebMCP trace', exact: true }).click();
+  await page.locator('.trace-console').screenshot({ path: new URL('../artifacts/gallery/04-webmcp-trace.png', import.meta.url).pathname });
   const artifact = { schemaVersion: 1, generatedAt: new Date().toISOString(), url, browser: 'Google Chrome with WebMCP enabled', ...result };
   await writeFile(new URL('../artifacts/native-webmcp-verification.json', import.meta.url), `${JSON.stringify(artifact, null, 2)}\n`);
   if (pageErrors.length) throw new Error(pageErrors.join(' | '));
