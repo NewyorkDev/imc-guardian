@@ -226,6 +226,24 @@ main { display: flex; flex-direction: column; }
 .corridor-load:disabled { cursor: wait; opacity: .72; }
 .corridor-error { position: absolute; z-index: 6; left: 20px; bottom: 80px; padding: 10px 12px; color: #ffd1ca; background: rgba(92, 32, 24, .92); border: 1px solid #b55a4c; font: 500 8px "DM Mono", monospace; }
 .east-coast-corridor > footer { display: flex; justify-content: space-between; padding-top: 13px; color: #91a2a5; font: 500 8px "DM Mono", monospace; }
+.restored-corridor-map { position: relative; height: 520px; margin-top: 50px; overflow: hidden; background-color: #132226; background-image: linear-gradient(#1f3438 1px, transparent 1px), linear-gradient(90deg, #1f3438 1px, transparent 1px); background-size: 60px 60px; border: 1px solid #3b4b4e; }
+.restored-corridor-map .usa-shape { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; opacity: .025; font-size: clamp(120px, 15vw, 210px); font-weight: 800; letter-spacing: -.09em; }
+.restored-corridor-map .cloud-band { position: absolute; border-radius: 50%; filter: blur(42px); opacity: .32; }
+.restored-corridor-map .band-one { width: 54%; height: 34%; left: 10%; top: 16%; background: #a9d6e5; transform: rotate(9deg); }
+.restored-corridor-map .band-two { width: 43%; height: 29%; right: 5%; bottom: 13%; background: #f18f57; transform: rotate(-12deg); }
+.restored-corridor-map .weather-sample { position: absolute; z-index: 2; }
+.restored-corridor-map .weather-sample > i { display: block; width: 16px; height: 16px; background: rgba(180, 220, 234, var(--cloud)); border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 7px rgba(180, 220, 234, .12), 0 0 28px rgba(180, 220, 234, var(--cloud)); }
+.restored-corridor-map .weather-sample span { position: absolute; left: 21px; top: -7px; padding: 0; color: #fff; background: transparent; border: 0; backdrop-filter: none; white-space: nowrap; font: 500 9px "DM Mono", monospace; }
+.restored-corridor-map .weather-sample small { display: block; margin-top: 3px; color: #9fb1b5; font-size: 7px; }
+.restored-corridor-map > button { position: absolute; z-index: 5; left: 50%; top: 50%; padding: 17px 22px; color: #101a1d; background: var(--lime); border: 0; cursor: pointer; font-weight: 800; transform: translate(-50%, -50%); }
+.restored-corridor-map > button:disabled { cursor: wait; opacity: .72; }
+.restored-corridor-map .flight-animation { position: absolute; z-index: 4; left: 61%; top: 62%; width: 24%; height: 40px; border-top: 2px dashed var(--lime); transform: rotate(-16deg); }
+.restored-corridor-map .flight-animation .plane { position: absolute; top: -18px; color: #fff; font-size: 27px; animation: restoredFlyRoute 7s linear infinite; }
+.restored-corridor-map .flight-animation b { position: absolute; top: 15px; color: var(--lime); font: 500 8px "DM Mono", monospace; }
+.restored-corridor-map .ai-callout { position: absolute; z-index: 4; right: 4%; top: 7%; width: 280px; padding: 16px; color: #101a1d; background: #f4f1e9; box-shadow: 8px 8px 0 var(--lime); }
+.restored-corridor-map .ai-callout small { color: #687579; font: 700 8px "DM Mono", monospace; }
+.restored-corridor-map .ai-callout p { margin: 8px 0 0; font-size: 12px; line-height: 1.5; }
+@keyframes restoredFlyRoute { 0% { left: 0; transform: rotate(4deg); } 50% { transform: rotate(-3deg); } 100% { left: 93%; transform: rotate(4deg); } }
 .globe-shell { inset: 4% 5%; background: rgba(7, 20, 24, .76); backdrop-filter: blur(3px); }
 .world-outline { fill: #456a73; opacity: .78; }
 .cloud-band { opacity: .5; }
@@ -251,6 +269,7 @@ main { display: flex; flex-direction: column; }
   .weather-storyline b { margin: 0; }
   .corridor-head { grid-template-columns: 1fr; gap: 25px; }
   .corridor-stop span { display: none; }
+  .restored-corridor-map .weather-sample span { display: block; }
 }
 
 @media (max-width: 700px) {
@@ -272,6 +291,9 @@ main { display: flex; flex-direction: column; }
   .time-player span { display: none; }
   .east-coast-corridor { margin-top: 80px; padding-top: 75px; }
   .east-weather-map { min-height: 520px; }
+  .restored-corridor-map { height: 430px; }
+  .restored-corridor-map .weather-sample span { display: none; }
+  .restored-corridor-map .ai-callout { right: 14px; width: 220px; }
   .corridor-ai-callout { right: 12px; top: 12px; width: 220px; padding: 14px; }
   .corridor-route-label { left: 12px; top: 12px; width: 165px; }
   .corridor-route-label b { font-size: 20px; }

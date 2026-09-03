@@ -19,17 +19,6 @@ const LIVE_CACHE_KEY = "imc-guardian-live-context-v2";
 const LIVE_CACHE_MS = 15 * 60 * 1000;
 const ROUTE_CACHE_KEY = "imc-guardian-tpa-jfk-v1";
 const ROUTE_CACHE_MS = 60 * 60 * 1000;
-const routeWeatherStops = [
-  ["Tampa", 17, 85],
-  ["Jacksonville", 28, 76],
-  ["Savannah", 37, 67],
-  ["Charleston", 45, 61],
-  ["Raleigh", 54, 50],
-  ["Richmond", 62, 42],
-  ["Washington", 70, 34],
-  ["Philadelphia", 80, 25],
-  ["JFK", 90, 16],
-].map(([name, x, y]) => ({ name, x, y }));
 const categoryClass = (value) => value.toLowerCase();
 const formatCondition = (value = "Current") =>
   value.replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -260,6 +249,21 @@ function App() {
     const preload = window.setTimeout(() => loadLiveContext(false), 500);
     return () => window.clearTimeout(preload);
   }, [engine]);
+  useEffect(() => {
+    const corridor = document.querySelector("#tampa-jfk");
+    if (!corridor || routeContext || routeLoading) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          observer.disconnect();
+          loadRouteContext();
+        }
+      },
+      { rootMargin: "350px 0px" },
+    );
+    observer.observe(corridor);
+    return () => observer.disconnect();
+  }, [routeContext, routeLoading]);
   const assessment = state.assessment;
   const validatedAlert = state.events.findLast?.(
     (event) => event.name === "validate_weather_alert",
@@ -820,76 +824,54 @@ function App() {
                 </h2>
               </div>
               <p>
-                One route can cross several weather systems. Load nine current
-                WeatherKit checkpoints from Tampa to JFK, then let the agent
-                watch for the material change instead of adding more noise.
+                WeatherKit samples current cloud cover, precipitation, wind,
+                and temperature along nine points from Tampa to JFK. Aviation
+                Weather Center data remains the source for flight categories
+                and advisories.
               </p>
             </div>
-            <div className="east-weather-map">
-              <div className="east-coast-type">EAST COAST</div>
-              <div className="corridor-cloud corridor-cloud-one" />
-              <div className="corridor-cloud corridor-cloud-two" />
-              <svg
-                className="corridor-route"
-                viewBox="0 0 1000 500"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-              >
-                <path d="M170 425 C260 390 330 350 370 335 S500 280 540 250 S650 200 700 170 S820 115 900 80" />
-                <g className="corridor-plane">
-                  <text x="0" y="0">✈</text>
-                  <animateMotion
-                    dur="8s"
-                    repeatCount="indefinite"
-                    rotate="auto"
-                    path="M170 425 C260 390 330 350 370 335 S500 280 540 250 S650 200 700 170 S820 115 900 80"
-                  />
-                </g>
-              </svg>
-              {(routeContext?.samples || routeWeatherStops).map((sample, index) => (
+            <div className="us-weather-map restored-corridor-map">
+              <div className="usa-shape">EAST COAST</div>
+              <div className="cloud-band band-one" />
+              <div className="cloud-band band-two" />
+              {(routeContext?.samples || []).map((sample) => (
                 <div
-                  className={`corridor-stop ${routeContext ? "live" : "waiting"} ${index >= 7 ? "right-label" : ""}`}
+                  className="weather-sample"
                   key={sample.name}
                   style={{
                     left: `${sample.x}%`,
                     top: `${sample.y}%`,
-                    "--cloud": Math.max(0.2, sample.cloudCover || 0.2),
+                    "--cloud": Math.max(0.16, sample.cloudCover || 0),
                   }}
                 >
                   <i />
                   <span>
                     <b>{sample.name}</b>
                     <small>
-                      {routeContext
-                        ? `${Math.round((sample.cloudCover || 0) * 100)}% cloud · ${Math.round(sample.temperature)}°C`
-                        : `CHECKPOINT ${String(index + 1).padStart(2, "0")}`}
+                      {Math.round((sample.cloudCover || 0) * 100)}% cloud ·{" "}
+                      {Math.round(sample.temperature)}°C
                     </small>
                   </span>
                 </div>
               ))}
-              <div className="corridor-route-label">
-                <small>LIVE CORRIDOR</small>
+              <div className="flight-animation">
+                <span className="plane">✈</span>
+                <i />
                 <b>KTPA → KJFK</b>
-                <span>9 WEATHER CHECKPOINTS</span>
               </div>
-              <div className="corridor-ai-callout">
-                <small>EXAMPLE AI ROUTE WATCH</small>
+              <div className="ai-callout">
+                <small>SECOND PAIR OF EYES</small>
                 <p>
-                  “I’m watching the route ahead. I’ll surface the material
-                  change, not every weather update.”
+                  “Conditions are changing farther north. Want me to keep
+                  watching the Tampa to JFK corridor?”
                 </p>
               </div>
-              <button
-                className="corridor-load"
-                onClick={loadRouteContext}
-                disabled={routeLoading}
-              >
-                {routeLoading
-                  ? "LOADING 9 LIVE CHECKPOINTS…"
-                  : routeContext
-                    ? `LIVE ROUTE LOADED · ${routeContext.cache.toUpperCase()} CACHE`
-                    : "LOAD LIVE TAMPA → JFK WEATHER"}
-              </button>
+              {!routeContext && (
+                <button onClick={loadRouteContext} disabled={routeLoading}>
+                  {routeLoading ? "LOADING LIVE ROUTE…" : "LOAD LIVE TAMPA → JFK WEATHER"}{" "}
+                  <span>→</span>
+                </button>
+              )}
               {routeError && <div className="corridor-error">{routeError}</div>}
             </div>
             <footer>
