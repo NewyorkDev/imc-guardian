@@ -1,15 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { geoNaturalEarth1, geoPath } from "d3-geo";
-import { feature } from "topojson-client";
-import worldAtlas from "world-atlas/land-110m.json";
 import { createGuardianEngine } from "./engine.js";
 import { installWebMcp, toolDefinitions } from "./webmcp.js";
 import { airports, demoRoute, forecasts, observations } from "./scenario.js";
+import CesiumWeatherGlobe from "./CesiumWeatherGlobe.jsx";
 import "./styles.css";
 import "./live.css";
 import "./national.css";
 import "./ai.css";
+import "./max.css";
 
 const routeDots = [
   { x: 16, y: 77, id: "KTPF" },
@@ -18,15 +17,19 @@ const routeDots = [
 ];
 const LIVE_CACHE_KEY = "imc-guardian-live-context-v2";
 const LIVE_CACHE_MS = 15 * 60 * 1000;
-const worldLand = feature(worldAtlas, worldAtlas.objects.land);
-const worldProjection = geoNaturalEarth1().fitExtent(
-  [
-    [28, 18],
-    [972, 482],
-  ],
-  worldLand,
-);
-const worldLandPath = geoPath(worldProjection)(worldLand);
+const ROUTE_CACHE_KEY = "imc-guardian-tpa-jfk-v1";
+const ROUTE_CACHE_MS = 60 * 60 * 1000;
+const routeWeatherStops = [
+  ["Tampa", 17, 85],
+  ["Jacksonville", 28, 76],
+  ["Savannah", 37, 67],
+  ["Charleston", 45, 61],
+  ["Raleigh", 54, 50],
+  ["Richmond", 62, 42],
+  ["Washington", 70, 34],
+  ["Philadelphia", 80, 25],
+  ["JFK", 90, 16],
+].map(([name, x, y]) => ({ name, x, y }));
 const categoryClass = (value) => value.toLowerCase();
 const formatCondition = (value = "Current") =>
   value.replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -51,6 +54,10 @@ function App() {
   const [liveContext, setLiveContext] = useState(null);
   const [liveError, setLiveError] = useState("");
   const [liveLoading, setLiveLoading] = useState(false);
+  const [routeContext, setRouteContext] = useState(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [routeError, setRouteError] = useState("");
+  const [showLiveComparison, setShowLiveComparison] = useState(false);
   const [running, setRunning] = useState(false);
   const [watching, setWatching] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
@@ -87,27 +94,9 @@ function App() {
     invoke("compare_route_options");
     window.setTimeout(() => {
       setRunning(false);
-      document
-        .querySelector("#evidence")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      const evidence = document.querySelector("#evidence");
-      evidence?.classList.add("attention-pulse");
-      window.setTimeout(
-        () => evidence?.classList.remove("attention-pulse"),
-        1800,
-      );
     }, 250);
   };
-  const revealLiveSources = () => {
-    window.setTimeout(
-      () =>
-        document
-          .querySelector(".live-source-panel")
-          ?.scrollIntoView({ behavior: "smooth", block: "center" }),
-      80,
-    );
-  };
-  const loadLiveContext = async () => {
+  const loadLiveContext = async (showPanel = true) => {
     setLiveError("");
     setLiveLoading(true);
     try {
@@ -116,9 +105,11 @@ function App() {
         const parsed = JSON.parse(cached);
         if (Date.now() - new Date(parsed.checkedAt).getTime() < LIVE_CACHE_MS) {
           setLiveContext({ ...parsed, cache: "browser" });
-          setMode("live");
+          if (showPanel) {
+            setMode("live");
+            setShowLiveComparison(true);
+          }
           setLiveLoading(false);
-          revealLiveSources();
           return;
         }
       }
@@ -144,13 +135,43 @@ function App() {
       };
       setLiveContext(context);
       sessionStorage.setItem(LIVE_CACHE_KEY, JSON.stringify(context));
-      setMode("live");
-      revealLiveSources();
+      if (showPanel) {
+        setMode("live");
+        setShowLiveComparison(true);
+      }
     } catch (error) {
       setLiveError(error.message);
       setMode("scenario");
     } finally {
       setLiveLoading(false);
+    }
+  };
+  const loadRouteContext = async () => {
+    setRouteError("");
+    setRouteLoading(true);
+    try {
+      const cached = sessionStorage.getItem(ROUTE_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - new Date(parsed.checkedAt).getTime() < ROUTE_CACHE_MS) {
+          setRouteContext({ ...parsed, cache: "browser" });
+          return;
+        }
+      }
+      const response = await fetch("/api/weatherkit?scope=tpa-jfk");
+      if (!response.ok) throw new Error(`WeatherKit ${response.status}`);
+      const data = await response.json();
+      const context = {
+        ...data,
+        checkedAt: new Date().toISOString(),
+        cache: "network",
+      };
+      setRouteContext(context);
+      sessionStorage.setItem(ROUTE_CACHE_KEY, JSON.stringify(context));
+    } catch (error) {
+      setRouteError(error.message);
+    } finally {
+      setRouteLoading(false);
     }
   };
   const enableRouteWatch = async () => {
@@ -236,6 +257,8 @@ function App() {
   };
   useEffect(() => {
     installWebMcp(engine, () => redraw((n) => n + 1)).then(setNativeCount);
+    const preload = window.setTimeout(() => loadLiveContext(false), 500);
+    return () => window.clearTimeout(preload);
   }, [engine]);
   const assessment = state.assessment;
   const validatedAlert = state.events.findLast?.(
@@ -254,12 +277,13 @@ function App() {
           <span className="shield">IG</span>
           <span>
             <b>IMC GUARDIAN</b>
-            <small>AVIATION DECISION SUPPORT</small>
+            <small>SMART WEATHER NOTIFICATIONS</small>
           </span>
         </a>
         <nav>
-          <a href="#route">Route</a>
-          <a href="#evidence">Weather evidence</a>
+          <a href="#national-weather">Live world</a>
+          <a href="#tampa-jfk">Tampa → JFK</a>
+          <a href="#ai-route-check">AI + WebMCP</a>
           <a href="#decision">Decision room</a>
         </nav>
         <div className="status">
@@ -270,15 +294,16 @@ function App() {
       <main id="top">
         <section className="hero">
           <div className="hero-copy">
-            <p className="eyebrow">THE WEATHER DECISION, MADE VISIBLE</p>
+            <p className="eyebrow">A SECOND PAIR OF EYES FOR CHANGING WEATHER</p>
             <h1>
-              See the risk
+              See the weather change
               <br />
-              <em>before the clouds.</em>
+              <em>before it changes the flight.</em>
             </h1>
             <p className="lede">
-              A pilot and an AI inspect the same route, evidence, limits, and
-              alternatives. The system explains. The pilot decides.
+              IMC Guardian watches the conditions that matter to your route,
+              detects meaningful deterioration, and double-checks the evidence
+              before it sends a focused alert.
             </p>
             <div className="hero-actions">
               <button
@@ -295,14 +320,25 @@ function App() {
               </button>
               <button
                 className="ghost"
-                onClick={loadLiveContext}
+                onClick={() => {
+                  if (liveContext) {
+                    setShowLiveComparison((visible) => {
+                      setMode(visible ? "scenario" : "live");
+                      return !visible;
+                    });
+                  } else {
+                    loadLiveContext(true);
+                  }
+                }}
                 disabled={liveLoading}
               >
                 {liveLoading
                   ? "Checking AWC + Apple..."
-                  : liveContext
-                    ? "Show live source comparison"
-                    : "Check live sources"}
+                  : showLiveComparison
+                    ? "Hide live comparison"
+                    : liveContext
+                      ? "Show live comparison"
+                      : "Load live weather"}
               </button>
             </div>
             {assessment && (
@@ -338,6 +374,8 @@ function App() {
               </b>
             </div>
             <div className="map">
+              <div className="hero-runway"><span>27</span><i /><span>09</span></div>
+              <div className="hero-aircraft" aria-hidden="true">✈</div>
               <div className="weather weather-one" />
               <div className="weather weather-two" />
               <svg viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -375,6 +413,20 @@ function App() {
                   {mode === "live" ? "SCENARIO ONLY" : "NORTHERN CORRIDOR"}
                 </small>
               </div>
+              {assessment && (
+                <div className="hero-assessment-alert">
+                  <span>WEATHER DETERIORATION DETECTED</span>
+                  <b>KTLH · 900 FT ceiling · 3 SM visibility</b>
+                  <em>HIGH ATTENTION</em>
+                </div>
+              )}
+            </div>
+            <div className="weather-storyline">
+              <span><small>DEPART · TAMPA</small><b>5,500 FT</b><em>VFR · STEADY</em></span>
+              <i>→</i>
+              <span><small>EN ROUTE · CROSS CITY</small><b>2,800 FT</b><em>MVFR · LOWERING</em></span>
+              <i>→</i>
+              <span><small>ARRIVE · TALLAHASSEE</small><b>900 FT</b><em>IFR · DETERIORATING</em></span>
             </div>
             <div className="legend">
               <span>
@@ -395,7 +447,7 @@ function App() {
                   : "Scenario data, timestamped for judging"}
               </span>
             </div>
-            {liveContext && (
+            {showLiveComparison && liveContext && (
               <div className="live-source-panel">
                 <div className="live-source-head">
                   <span>LIVE SOURCE CHECK</span>
@@ -727,7 +779,7 @@ function App() {
           </div>
         </section>
 
-        <section className="national-weather">
+        <section className="national-weather" id="national-weather">
           <div className="national-head">
             <div>
               <p className="eyebrow">
@@ -746,51 +798,8 @@ function App() {
               categories and advisories.
             </p>
           </div>
-          <div className="global-weather-map">
-            <div className="globe-shell">
-              <div className="globe-grid" />
-              <svg
-                className="world-outline"
-                viewBox="0 0 1000 500"
-                aria-hidden="true"
-              >
-                <path d={worldLandPath} />
-              </svg>
-              <div className="cloud-band band-one" />
-              <div className="cloud-band band-two" />
-              {liveContext?.weatherSamples?.map((sample) => {
-                const position = worldProjection([sample.lon, sample.lat]);
-                if (!position) return null;
-                const [x, y] = position;
-                return (
-                  <div
-                    key={sample.name}
-                    className={`weather-sample ${x > 740 ? "right-label" : ""}`}
-                    style={{
-                      left: `${x / 10}%`,
-                      top: `${y / 5}%`,
-                      "--cloud": Math.max(0.16, sample.cloudCover || 0),
-                    }}
-                  >
-                    <i />
-                    <span>
-                      <b>{sample.name}</b>
-                      <small>
-                        {formatCondition(sample.conditionCode)} ·{" "}
-                        {Math.round((sample.cloudCover || 0) * 100)}% cloud ·{" "}
-                        {Math.round(sample.temperature)}°C ·{" "}
-                        {Math.round(sample.windSpeed || 0)} km/h
-                      </small>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            {!liveContext && (
-              <button onClick={loadLiveContext}>
-                LOAD APPLE GLOBAL WEATHER <span>→</span>
-              </button>
-            )}
+          <div className="global-weather-map cesium-map-wrap">
+            <CesiumWeatherGlobe samples={liveContext?.weatherSamples || []} />
           </div>
           <footer>
             <span>Weather data provided by Apple WeatherKit</span>
@@ -800,6 +809,98 @@ function App() {
                 : "GLOBAL LAYER LOADS ON REQUEST"}
             </span>
           </footer>
+          <div className="east-coast-corridor" id="tampa-jfk">
+            <div className="corridor-head">
+              <div>
+                <p className="eyebrow">APPLE WEATHERKIT · LIVE ROUTE CORRIDOR</p>
+                <h2>
+                  Tampa to JFK,
+                  <br />
+                  weather changing ahead.
+                </h2>
+              </div>
+              <p>
+                One route can cross several weather systems. Load nine current
+                WeatherKit checkpoints from Tampa to JFK, then let the agent
+                watch for the material change instead of adding more noise.
+              </p>
+            </div>
+            <div className="east-weather-map">
+              <div className="east-coast-type">EAST COAST</div>
+              <div className="corridor-cloud corridor-cloud-one" />
+              <div className="corridor-cloud corridor-cloud-two" />
+              <svg
+                className="corridor-route"
+                viewBox="0 0 1000 500"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path d="M170 425 C260 390 330 350 370 335 S500 280 540 250 S650 200 700 170 S820 115 900 80" />
+                <g className="corridor-plane">
+                  <text x="0" y="0">✈</text>
+                  <animateMotion
+                    dur="8s"
+                    repeatCount="indefinite"
+                    rotate="auto"
+                    path="M170 425 C260 390 330 350 370 335 S500 280 540 250 S650 200 700 170 S820 115 900 80"
+                  />
+                </g>
+              </svg>
+              {(routeContext?.samples || routeWeatherStops).map((sample, index) => (
+                <div
+                  className={`corridor-stop ${routeContext ? "live" : "waiting"} ${index >= 7 ? "right-label" : ""}`}
+                  key={sample.name}
+                  style={{
+                    left: `${sample.x}%`,
+                    top: `${sample.y}%`,
+                    "--cloud": Math.max(0.2, sample.cloudCover || 0.2),
+                  }}
+                >
+                  <i />
+                  <span>
+                    <b>{sample.name}</b>
+                    <small>
+                      {routeContext
+                        ? `${Math.round((sample.cloudCover || 0) * 100)}% cloud · ${Math.round(sample.temperature)}°C`
+                        : `CHECKPOINT ${String(index + 1).padStart(2, "0")}`}
+                    </small>
+                  </span>
+                </div>
+              ))}
+              <div className="corridor-route-label">
+                <small>LIVE CORRIDOR</small>
+                <b>KTPA → KJFK</b>
+                <span>9 WEATHER CHECKPOINTS</span>
+              </div>
+              <div className="corridor-ai-callout">
+                <small>EXAMPLE AI ROUTE WATCH</small>
+                <p>
+                  “I’m watching the route ahead. I’ll surface the material
+                  change, not every weather update.”
+                </p>
+              </div>
+              <button
+                className="corridor-load"
+                onClick={loadRouteContext}
+                disabled={routeLoading}
+              >
+                {routeLoading
+                  ? "LOADING 9 LIVE CHECKPOINTS…"
+                  : routeContext
+                    ? `LIVE ROUTE LOADED · ${routeContext.cache.toUpperCase()} CACHE`
+                    : "LOAD LIVE TAMPA → JFK WEATHER"}
+              </button>
+              {routeError && <div className="corridor-error">{routeError}</div>}
+            </div>
+            <footer>
+              <span>Weather data provided by Apple WeatherKit</span>
+              <span>
+                {routeContext
+                  ? `9 LIVE ROUTE POINTS · ${new Date(routeContext.samples[0]?.asOf).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                  : "LIVE ROUTE LOADS ON REQUEST · 1-HOUR CACHE"}
+              </span>
+            </footer>
+          </div>
         </section>
 
         <section className="route-watch">

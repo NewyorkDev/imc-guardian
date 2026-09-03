@@ -1,0 +1,280 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap");
+
+:root {
+  --ink: #081316;
+  --cream: #f0eee7;
+  --paper: #fbfaf6;
+  --lime: #cbff3d;
+  --orange: #ffad4e;
+  --red: #ff6854;
+  --blue: #66aaff;
+  --line: #c8ceca;
+  --muted: #65777b;
+}
+
+body { font-family: "Inter Tight", sans-serif; }
+.app { background: var(--cream); }
+.app > header {
+  height: 76px;
+  color: #fff;
+  background: rgba(5, 14, 17, .97);
+  border-color: #283c41;
+  backdrop-filter: blur(16px);
+}
+.brand .shield { background: #172a30; border: 1px solid #3b535a; }
+.brand small { color: #82979b; }
+.app > header nav a { color: #9badb1; }
+.app > header nav a:hover { color: #fff; }
+.status { color: #b8c7ca; background: #102126; border-color: #33494f; }
+
+main { display: flex; flex-direction: column; }
+.hero { order: 1; min-height: calc(100vh - 76px); padding: 65px 4vw 72px; color: #fff; background: #061114; position: relative; overflow: hidden; }
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .2;
+  background-image: linear-gradient(#385158 1px, transparent 1px), linear-gradient(90deg, #385158 1px, transparent 1px);
+  background-size: 74px 74px;
+  mask-image: radial-gradient(circle at 72% 48%, #000, transparent 76%);
+  pointer-events: none;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  width: 650px;
+  height: 650px;
+  left: -270px;
+  bottom: -390px;
+  border: 1px solid rgba(123, 184, 196, .2);
+  border-radius: 50%;
+  box-shadow: 0 0 0 110px rgba(123, 184, 196, .035), 0 0 0 220px rgba(123, 184, 196, .025);
+}
+.hero-copy, .radar-card { position: relative; z-index: 2; }
+.hero .eyebrow { color: var(--lime); }
+.hero h1 { max-width: 760px; margin: 24px 0; font-size: clamp(62px, 6.7vw, 112px); line-height: .82; letter-spacing: -.077em; }
+.hero h1 em { display: block; margin-top: 10px; color: var(--red); font-style: italic; }
+.lede { max-width: 650px; color: #b5c3c6; font-size: 19px; line-height: 1.55; }
+.hero-actions { margin-top: 31px; }
+.primary, .ghost { min-height: 55px; padding: 0 20px; font-size: 10px; letter-spacing: .02em; }
+.primary { min-width: 245px; color: var(--ink); background: var(--lime); }
+.primary span { color: var(--ink); }
+.ghost { min-width: 190px; color: #fff; border-color: #496168; }
+.hero .boundary { max-width: 620px; color: #6f858a; }
+.run-success, .live-note, .live-error { max-width: 620px; }
+
+.radar-card { overflow: hidden; background: #0a171b; border-color: #365057; box-shadow: 22px 22px 0 rgba(255, 255, 255, .045), 0 0 110px rgba(103, 170, 194, .12); }
+.radar-head { height: 46px; padding: 0 17px; border-color: #30464c; }
+.map { height: 510px; isolation: isolate; background: #0b1b20; background-image: linear-gradient(rgba(64, 98, 107, .21) 1px, transparent 1px), linear-gradient(90deg, rgba(64, 98, 107, .21) 1px, transparent 1px); background-size: 58px 58px; }
+.map::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: linear-gradient(90deg, rgba(6, 17, 20, .45), rgba(6, 17, 20, .1) 42%, rgba(6, 17, 20, .3)), url("/assets/aviation-weather-hero-v2.png");
+  background-size: cover;
+  background-position: center;
+  opacity: .78;
+  filter: saturate(.8) contrast(1.1);
+}
+.map::after { content: "FLORIDA WEATHER CORRIDOR"; right: 4%; bottom: 3%; color: #fff; opacity: .12; font: 800 13px "DM Mono"; letter-spacing: .14em; }
+.map svg path { stroke: #d6ff57; stroke-width: 1.05; stroke-dasharray: 2.5 1.6; filter: drop-shadow(0 0 5px rgba(203, 255, 61, .7)); }
+.weather { opacity: .28; }
+.weather-one { background: #ff6d4a; }
+.weather-two { background: #79b8d2; }
+.airport-dot > i { width: 18px; height: 18px; box-shadow: 0 0 0 7px rgba(66, 173, 105, .18), 0 0 26px #42ad69; }
+.airport-dot.mvfr > i { box-shadow: 0 0 0 7px rgba(86, 142, 229, .18), 0 0 26px #568ee5; }
+.airport-dot.ifr > i { box-shadow: 0 0 0 7px rgba(232, 63, 40, .2), 0 0 28px #e83f28; }
+.airport-dot label { padding: 7px 9px; background: rgba(4, 13, 16, .8); border: 1px solid rgba(113, 142, 149, .6); backdrop-filter: blur(8px); }
+.airport-dot .leg { color: #d4e1e3; }
+.gairmet { right: 3%; top: 51%; color: #fff; background: rgba(116, 39, 28, .78); border-left-color: var(--red); backdrop-filter: blur(8px); }
+.hero-assessment-alert { position: absolute; z-index: 12; left: 18px; right: 18px; bottom: 17px; display: grid; grid-template-columns: auto 1fr auto; gap: 17px; align-items: center; padding: 14px 15px; color: #fff; background: rgba(82, 31, 25, .92); border: 1px solid #a34b3d; box-shadow: 0 12px 35px rgba(0, 0, 0, .32); backdrop-filter: blur(12px); animation: alertIn .32s ease both; font: 500 8px "DM Mono"; }
+.hero-assessment-alert span, .hero-assessment-alert em { color: #ff8b78; font-style: normal; }
+.hero-assessment-alert em { justify-self: end; }
+@keyframes alertIn { from { opacity: 0; transform: translateY(12px); } }
+.hero-runway { position: absolute; z-index: 5; left: 6%; bottom: 5%; width: 23px; height: 110px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px 0; color: #fff; background: rgba(71, 84, 88, .92); border: 1px solid #9ba8aa; transform: rotate(48deg); font: 500 7px "DM Mono"; box-shadow: 0 0 0 5px rgba(255, 255, 255, .06); }
+.hero-runway i { position: absolute; top: 23px; bottom: 23px; left: 50%; border-left: 1px dashed #fff; }
+.hero-aircraft { position: absolute; z-index: 7; left: 29%; top: 60%; color: #fff; font-size: 38px; transform: rotate(-28deg); filter: drop-shadow(0 0 8px #fff); animation: aircraftFloat 3.5s ease-in-out infinite alternate; }
+@keyframes aircraftFloat { to { transform: translate(8px, -8px) rotate(-28deg); } }
+.weather-storyline { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; color: #fff; border-top: 1px solid #30464c; background: #0c1b1f; }
+.weather-storyline > span { padding: 14px 15px; }
+.weather-storyline small, .weather-storyline b, .weather-storyline em { display: block; }
+.weather-storyline small { color: #7e9499; font: 500 6px "DM Mono"; }
+.weather-storyline b { margin: 5px 0 2px; font-size: 16px; }
+.weather-storyline em { color: var(--green, #63ed9d); font: normal 500 6px "DM Mono"; }
+.weather-storyline span:nth-of-type(2) em { color: var(--blue); }
+.weather-storyline span:nth-of-type(3) em { color: var(--red); }
+.weather-storyline > i { color: #5f7479; font-style: normal; }
+.legend { border-color: #30464c; }
+.live-source-panel { position: absolute; z-index: 15; inset: 46px 0 0; overflow: auto; padding: 27px; background: rgba(7, 20, 24, .96); border: 0; backdrop-filter: blur(18px); animation: sourceReveal .28s ease both; }
+@keyframes sourceReveal { from { opacity: 0; transform: translateY(15px); } }
+.live-source-head { font-size: 9px; }
+.live-source-panel > p { max-width: 700px; margin: 12px 0 24px; font-size: 12px; }
+.live-source-grid { gap: 12px; }
+.live-source-grid article { min-height: 150px; padding: 17px; }
+.live-source-grid article strong { margin-top: 14px; font-size: 9px; }
+.live-source-grid article span, .live-source-grid article small, .live-source-grid article em { font-size: 8px; }
+
+.flight-strip { order: 2; position: relative; z-index: 3; background: var(--paper); }
+.national-weather { order: 3; padding-top: 80px; background: #071316; }
+.national-weather { scroll-margin-top: 76px; }
+.ai-console { order: 4; }
+.evidence { order: 5; }
+.route-watch { order: 6; }
+.assessment { order: 7; }
+.decision { order: 8; }
+.trace { order: 9; }
+
+.national-head h2 { max-width: 820px; font-size: clamp(52px, 5.4vw, 88px); line-height: .88; }
+.global-weather-map { height: min(72vh, 720px); border-color: #476068; box-shadow: 0 0 100px rgba(99, 169, 191, .11); background-image: linear-gradient(rgba(7, 17, 20, .3), rgba(7, 17, 20, .64)), url("/assets/aviation-weather-hero-v2.png"); background-size: cover; background-position: center; }
+.global-weather-map::before { content: "LIVE APPLE WEATHERKIT"; position: absolute; z-index: 7; left: 18px; top: 18px; padding: 9px 11px; color: var(--lime); background: rgba(4, 14, 17, .76); border: 1px solid #496269; backdrop-filter: blur(8px); font: 500 7px "DM Mono"; letter-spacing: .12em; }
+.global-weather-map::after { content: "12 LIVE WEATHER LOCATIONS"; position: absolute; z-index: 7; right: 18px; top: 18px; padding: 9px 11px; color: #d4e0e2; background: rgba(4, 14, 17, .76); border: 1px solid #496269; backdrop-filter: blur(8px); font: 500 7px "DM Mono"; letter-spacing: .12em; }
+.cesium-map-wrap {
+  position: relative;
+  height: min(78vh, 780px);
+  min-height: 620px;
+  overflow: hidden;
+  isolation: isolate;
+  background: #010609;
+  border: 1px solid #425b62;
+  box-shadow: 0 32px 110px rgba(0, 0, 0, .34), 0 0 100px rgba(99, 169, 191, .11);
+}
+.cesium-map-wrap::before, .cesium-map-wrap::after { display: none; }
+.cesium-weather-experience, .cesium-globe, .cesium-globe .cesium-viewer, .cesium-globe .cesium-viewer-cesiumWidgetContainer, .cesium-globe .cesium-widget, .cesium-globe canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cesium-weather-experience::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(1, 6, 9, .36), transparent 25%, transparent 75%, rgba(1, 6, 9, .26)), linear-gradient(0deg, rgba(1, 6, 9, .55), transparent 25%);
+}
+.cesium-globe .cesium-widget-credits { right: 12px; bottom: 8px; z-index: 8; padding: 3px 7px; background: rgba(1, 6, 9, .72); border-radius: 2px; }
+.cesium-globe .cesium-widget-credits a, .cesium-globe .cesium-widget-credits span { color: #a6b6ba !important; font: 500 8px "DM Mono", monospace !important; }
+.space-sequence {
+  position: absolute;
+  z-index: 5;
+  top: 18px;
+  left: 50%;
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 10px 14px;
+  color: #798d92;
+  background: rgba(3, 13, 16, .76);
+  border: 1px solid rgba(106, 133, 140, .58);
+  backdrop-filter: blur(12px);
+  transform: translateX(-50%);
+  font: 500 8px "DM Mono", monospace;
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+.space-sequence span.active, .space-sequence span:nth-of-type(2) { color: var(--lime); }
+.space-sequence i { color: #53676c; font-style: normal; }
+.globe-controls { position: absolute; z-index: 6; top: 18px; left: 18px; display: flex; padding: 4px; background: rgba(3, 13, 16, .8); border: 1px solid rgba(106, 133, 140, .58); backdrop-filter: blur(12px); }
+.globe-controls button { min-height: 34px; padding: 0 13px; color: #8fa1a5; background: transparent; border: 0; cursor: pointer; font: 500 8px "DM Mono", monospace; letter-spacing: .07em; }
+.globe-controls button.active { color: #071316; background: var(--lime); }
+.satellite-status { position: absolute; z-index: 6; top: 78px; left: 18px; display: grid; gap: 7px; width: 210px; padding: 14px; color: #fff; background: rgba(3, 13, 16, .8); border: 1px solid rgba(106, 133, 140, .52); border-left: 3px solid var(--lime); backdrop-filter: blur(12px); }
+.satellite-status span, .satellite-status b, .satellite-status small { font: 500 8px "DM Mono", monospace; }
+.satellite-status span { color: var(--lime); letter-spacing: .08em; }
+.satellite-status span i { display: inline-block; width: 6px; height: 6px; margin-right: 7px; background: #526468; border-radius: 50%; }
+.satellite-status span i.ready { background: var(--lime); box-shadow: 0 0 12px var(--lime); }
+.satellite-status b { color: #fff; line-height: 1.45; }
+.satellite-status small { color: #82969b; }
+.route-risk-card { position: absolute; z-index: 6; right: 18px; bottom: 72px; display: grid; width: 230px; gap: 7px; padding: 15px; color: #fff; background: rgba(3, 13, 16, .84); border: 1px solid rgba(106, 133, 140, .58); border-right: 3px solid var(--red); backdrop-filter: blur(12px); }
+.route-risk-card span, .route-risk-card small { font: 500 8px "DM Mono", monospace; letter-spacing: .06em; }
+.route-risk-card span { color: #94a7ab; }
+.route-risk-card b { font-size: 25px; letter-spacing: -.035em; }
+.route-risk-card small { color: #ff8876; }
+.time-player { position: absolute; z-index: 6; left: 18px; right: 18px; bottom: 18px; display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center; padding: 7px; color: #a8b7ba; background: rgba(3, 13, 16, .83); border: 1px solid rgba(106, 133, 140, .5); backdrop-filter: blur(12px); }
+.time-player > button { width: 34px; height: 30px; color: #071316; background: var(--lime); border: 0; cursor: pointer; font-size: 11px; }
+.time-player > div { display: flex; gap: 5px; align-items: center; }
+.time-player > div button { flex: 1; height: 5px; padding: 0; background: #40555a; border: 0; cursor: pointer; transition: background .2s, box-shadow .2s; }
+.time-player > div button.active { background: var(--lime); box-shadow: 0 0 10px rgba(203, 255, 61, .8); }
+.time-player span { padding-right: 5px; font: 500 7px "DM Mono", monospace; letter-spacing: .08em; white-space: nowrap; }
+.imagery-warning { position: absolute; z-index: 9; left: 18px; bottom: 71px; max-width: 430px; padding: 10px 12px; color: #ffd1ca; background: rgba(92, 32, 24, .9); border: 1px solid #b55a4c; font: 500 8px "DM Mono", monospace; }
+.east-coast-corridor { margin-top: 120px; padding-top: 105px; border-top: 1px solid #31474d; scroll-margin-top: 76px; }
+.corridor-head { display: grid; grid-template-columns: 1fr 1fr; gap: 8vw; align-items: end; }
+.corridor-head h2 { max-width: 850px; margin: 12px 0 0; font-size: clamp(52px, 5.4vw, 88px); line-height: .88; letter-spacing: -.06em; }
+.corridor-head > p { max-width: 600px; color: #9baeb2; font-size: 16px; line-height: 1.65; }
+.east-weather-map { position: relative; height: min(72vh, 680px); min-height: 580px; margin-top: 52px; overflow: hidden; isolation: isolate; background-color: #071418; background-image: linear-gradient(90deg, rgba(4, 13, 16, .5), rgba(4, 13, 16, .05) 50%, rgba(4, 13, 16, .36)), url("/assets/aviation-weather-hero-v2.png"); background-size: cover; background-position: center; border: 1px solid #476068; box-shadow: 0 28px 90px rgba(0, 0, 0, .28); }
+.east-weather-map::before { content: ""; position: absolute; z-index: -1; inset: 0; opacity: .3; background-image: linear-gradient(rgba(117, 151, 160, .35) 1px, transparent 1px), linear-gradient(90deg, rgba(117, 151, 160, .35) 1px, transparent 1px); background-size: 66px 66px; mask-image: linear-gradient(90deg, #000, transparent 80%); }
+.east-coast-type { position: absolute; z-index: -1; right: 2%; bottom: -2%; color: #fff; opacity: .055; font-size: clamp(100px, 15vw, 250px); font-weight: 800; letter-spacing: -.09em; white-space: nowrap; }
+.corridor-cloud { position: absolute; z-index: -1; border-radius: 50%; filter: blur(45px); opacity: .24; }
+.corridor-cloud-one { width: 48%; height: 28%; left: 12%; top: 16%; background: #b6deeb; transform: rotate(12deg); }
+.corridor-cloud-two { width: 40%; height: 26%; right: 3%; bottom: 11%; background: #ff805f; transform: rotate(-17deg); }
+.corridor-route { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.corridor-route > path { fill: none; stroke: var(--lime); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 7 7; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 6px rgba(203, 255, 61, .85)); }
+.corridor-plane text { fill: #fff; stroke: #071316; stroke-width: 2; paint-order: stroke; font-size: 28px; filter: drop-shadow(0 0 7px #fff); }
+.corridor-stop { position: absolute; z-index: 4; transform: translate(-50%, -50%); }
+.corridor-stop > i { display: block; width: 15px; height: 15px; background: #6d7f83; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 7px rgba(255, 255, 255, .08), 0 0 22px rgba(255, 255, 255, .22); }
+.corridor-stop.live > i { background: rgba(166, 221, 238, var(--cloud)); box-shadow: 0 0 0 7px rgba(180, 220, 234, .13), 0 0 30px rgba(180, 220, 234, var(--cloud)); }
+.corridor-stop span { position: absolute; left: 25px; top: -9px; min-width: 125px; padding: 7px 8px; color: #fff; background: rgba(2, 12, 15, .76); border: 1px solid rgba(100, 129, 136, .54); backdrop-filter: blur(8px); white-space: nowrap; font: 500 8px "DM Mono", monospace; }
+.corridor-stop.right-label span { right: 25px; left: auto; text-align: right; }
+.corridor-stop span b, .corridor-stop span small { display: block; }
+.corridor-stop span b { text-transform: uppercase; letter-spacing: .05em; }
+.corridor-stop span small { margin-top: 4px; color: #92a8ad; font-size: 7px; }
+.corridor-route-label { position: absolute; z-index: 5; left: 19px; top: 19px; display: grid; gap: 7px; width: 210px; padding: 15px; color: #fff; background: rgba(3, 13, 16, .82); border: 1px solid #536b71; border-left: 3px solid var(--lime); backdrop-filter: blur(12px); }
+.corridor-route-label small, .corridor-route-label span { font: 500 7px "DM Mono", monospace; letter-spacing: .09em; }
+.corridor-route-label small { color: var(--lime); }
+.corridor-route-label b { font-size: 25px; letter-spacing: -.04em; }
+.corridor-route-label span { color: #8fa4a8; }
+.corridor-ai-callout { position: absolute; z-index: 5; right: 24px; top: 24px; width: min(330px, 34%); padding: 20px; color: #071316; background: #f4f1e9; border-top: 4px solid var(--lime); box-shadow: 12px 12px 0 rgba(203, 255, 61, .7); }
+.corridor-ai-callout small { color: #5e7074; font: 700 8px "DM Mono", monospace; letter-spacing: .08em; }
+.corridor-ai-callout p { margin: 9px 0 0; font-size: 14px; line-height: 1.48; }
+.corridor-load { position: absolute; z-index: 6; left: 20px; bottom: 20px; min-width: 280px; min-height: 50px; padding: 0 17px; color: #071316; background: var(--lime); border: 0; cursor: pointer; font: 700 9px "DM Mono", monospace; letter-spacing: .04em; }
+.corridor-load:disabled { cursor: wait; opacity: .72; }
+.corridor-error { position: absolute; z-index: 6; left: 20px; bottom: 80px; padding: 10px 12px; color: #ffd1ca; background: rgba(92, 32, 24, .92); border: 1px solid #b55a4c; font: 500 8px "DM Mono", monospace; }
+.east-coast-corridor > footer { display: flex; justify-content: space-between; padding-top: 13px; color: #91a2a5; font: 500 8px "DM Mono", monospace; }
+.globe-shell { inset: 4% 5%; background: rgba(7, 20, 24, .76); backdrop-filter: blur(3px); }
+.world-outline { fill: #456a73; opacity: .78; }
+.cloud-band { opacity: .5; }
+.weather-sample > i { width: 18px; height: 18px; box-shadow: 0 0 0 8px rgba(180, 220, 234, .12), 0 0 32px rgba(180, 220, 234, var(--cloud)); }
+.weather-sample span { left: 24px; top: -8px; padding: 5px 7px; background: rgba(5, 15, 18, .62); backdrop-filter: blur(5px); }
+.weather-sample.right-label span { right: 24px; }
+.weather-sample small { font-size: 7px; }
+
+.ai-console { background: #eceae3; }
+.ai-intro h2 { font-size: clamp(54px, 5vw, 82px); }
+.agent-terminal { box-shadow: 20px 20px 0 #c6cec2; }
+.route-watch h2, .decision h2, .trace h2, .section-title h2, .assessment h2 { letter-spacing: -.06em; }
+.route-watch { background: #dfe6dc; }
+.watch-card { box-shadow: 18px 18px 0 rgba(17, 31, 35, .08); }
+
+@media (max-width: 1100px) {
+  .hero { min-height: auto; }
+  .hero h1 { font-size: 70px; }
+  .map { height: 460px; }
+  .weather-storyline { grid-template-columns: 1fr; }
+  .weather-storyline > i { display: none; }
+  .weather-storyline > span { display: grid; grid-template-columns: 1fr auto auto; gap: 9px; align-items: center; border-bottom: 1px solid #273c41; }
+  .weather-storyline b { margin: 0; }
+  .corridor-head { grid-template-columns: 1fr; gap: 25px; }
+  .corridor-stop span { display: none; }
+}
+
+@media (max-width: 700px) {
+  .hero h1 { font-size: 52px; }
+  .hero-actions { display: grid; }
+  .primary, .ghost { width: 100%; }
+  .map { height: 390px; }
+  .weather-storyline > span { grid-template-columns: 1fr auto; }
+  .weather-storyline em { grid-column: 1/-1; }
+  .live-source-panel { inset: 46px 0 0; padding: 17px; }
+  .global-weather-map { height: 520px; }
+  .cesium-map-wrap { min-height: 520px; }
+  .space-sequence { top: 66px; max-width: calc(100% - 36px); gap: 6px; padding: 8px; overflow: hidden; font-size: 6px; }
+  .satellite-status { top: 104px; width: 175px; }
+  .route-risk-card { right: 10px; bottom: 68px; width: 190px; }
+  .route-risk-card b { font-size: 20px; }
+  .globe-controls { top: 10px; left: 10px; }
+  .time-player { left: 10px; right: 10px; bottom: 10px; grid-template-columns: 34px 1fr; }
+  .time-player span { display: none; }
+  .east-coast-corridor { margin-top: 80px; padding-top: 75px; }
+  .east-weather-map { min-height: 520px; }
+  .corridor-ai-callout { right: 12px; top: 12px; width: 220px; padding: 14px; }
+  .corridor-route-label { left: 12px; top: 12px; width: 165px; }
+  .corridor-route-label b { font-size: 20px; }
+  .corridor-load { left: 12px; right: 12px; bottom: 12px; min-width: 0; width: calc(100% - 24px); }
+  .east-coast-corridor > footer { display: grid; gap: 5px; }
+}
