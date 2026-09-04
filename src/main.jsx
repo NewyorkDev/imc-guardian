@@ -9,11 +9,79 @@ import "./live.css";
 import "./national.css";
 import "./ai.css";
 import "./max.css";
+import "./story.css";
 
 const routeDots = [
   { x: 16, y: 77, id: "KTPF" },
   { x: 47, y: 49, id: "KCTY" },
   { x: 79, y: 20, id: "KTLH" },
+];
+const caseStudies = [
+  {
+    year: "2025",
+    label: "SEVERE TURBULENCE · DIVERSION",
+    flight: "DELTA 56",
+    route: "SLC → AMS · DIVERTED TO MSP",
+    headline: "They had already changed course around weather.",
+    detail:
+      "The NTSB says the aircraft encountered severe turbulence at FL370 after the crew accepted an ATC-proposed deviation. The upset lasted about 2.5 minutes. Two crew members were seriously injured and the flight diverted to Minneapolis.",
+    lesson:
+      "A deviation is not the end of the monitoring problem. Conditions and the route picture keep changing.",
+    source: "NTSB PRELIMINARY REPORT",
+    href: "https://data.ntsb.gov/carol-repgen/api/Aviation/ReportMain/GenerateNewestReport/200672/pdf",
+  },
+  {
+    year: "2023",
+    label: "RAPIDLY DEVELOPING CONVECTION",
+    flight: "DELTA 175",
+    route: "MXP → ATL",
+    headline: "The cell was not apparent on the displays.",
+    detail:
+      "The NTSB found that a rapidly developing, low-precipitation cloud produced severe turbulence that was not apparent on aircraft radar or ATC scopes. Four people were seriously injured and thirteen received minor injuries.",
+    lesson:
+      "A second source should challenge the picture when new evidence arrives, not simply confirm the current plan.",
+    source: "NTSB FINAL REPORT",
+    href: "https://data.ntsb.gov/carol-repgen/api/Aviation/ReportMain/GenerateNewestReport/192959/pdf",
+  },
+  {
+    year: "2024",
+    label: "CONVECTIVE TURBULENCE · DIVERSION",
+    flight: "SINGAPORE 321",
+    route: "LHR → SIN · DIVERTED TO BKK",
+    headline: "The critical acceleration change took seconds.",
+    detail:
+      "Singapore's TSIB recorded a rapid change from +1.35G to -1.5G in 0.6 seconds over developing convective activity. The pilots stabilized the aircraft and diverted to Bangkok after learning of injuries.",
+    lesson:
+      "When the situation changes quickly, the useful alert is the short, prioritized one the crew can absorb.",
+    source: "SINGAPORE TSIB",
+    href: "https://www.mot.gov.sg/news-resources/newsroom/transport-safety-investigation-bureau-preliminary-investigation-findings-of-incident-involving-sq321/",
+  },
+  {
+    year: "2024",
+    label: "SEVERE TURBULENCE · DIVERSION",
+    flight: "AIR EUROPA 045",
+    route: "MAD → MVD · DIVERTED TO NAT",
+    headline: "A long route became an emergency diversion.",
+    detail:
+      "The Madrid-to-Montevideo flight diverted to Natal, Brazil after severe turbulence injured dozens of people. The aircraft landed normally and medical teams met the flight.",
+    lesson:
+      "Long routes need a continuously refreshed picture of weather ahead and viable places to land.",
+    source: "AIRLINE STATEMENT VIA ABC NEWS",
+    href: "https://abcnews.com/International/air-europa-flight-turbulence/story?id=111595157",
+  },
+  {
+    year: "2009",
+    label: "FOUNDATIONAL SENSOR CASE",
+    flight: "AIR FRANCE 447",
+    route: "GIG → CDG",
+    headline: "Weather and unreliable airspeed collided.",
+    detail:
+      "France's BEA identified icing of the pitot probes, erroneous speed indications, a stall, and impact with the ocean. The investigation became a defining study of sensor disagreement and human-machine interaction.",
+    lesson:
+      "Independent context can expose disagreement, but only certified aircraft systems and trained crews can diagnose and respond.",
+    source: "BEA FINAL INVESTIGATION",
+    href: "https://bea.aero/en/investigation-reports/notified-events/detail/accident-to-the-airbus-a330-203-registered-f-gzcp-and-operated-by-air-france-occured-on-06-01-2009-in-the-atlantic-ocean/",
+  },
 ];
 const LIVE_CACHE_KEY = "imc-guardian-live-context-v2";
 const LIVE_CACHE_MS = 15 * 60 * 1000;
@@ -84,6 +152,14 @@ function App() {
     window.setTimeout(() => {
       setRunning(false);
     }, 250);
+  };
+  const runAssessmentAndShow = () => {
+    runAssessment();
+    window.setTimeout(() => {
+      document
+        .querySelector("#ai-route-check")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 180);
   };
   const loadLiveContext = async (showPanel = true) => {
     setLiveError("");
@@ -285,10 +361,10 @@ function App() {
           </span>
         </a>
         <nav>
-          <a href="#national-weather">Live world</a>
+          <a href="#ai-route-check">Live demo</a>
+          <a href="#case-studies">Why it matters</a>
+          <a href="#route-watch">Second Pair of Eyes</a>
           <a href="#tampa-jfk">Tampa → JFK</a>
-          <a href="#ai-route-check">AI + WebMCP</a>
-          <a href="#decision">Decision room</a>
         </nav>
         <div className="status">
           <i /> {nativeCount || toolDefinitions.length} WebMCP tools ready
@@ -312,14 +388,14 @@ function App() {
             <div className="hero-actions">
               <button
                 className="primary"
-                onClick={runAssessment}
+                onClick={runAssessmentAndShow}
                 disabled={running}
               >
                 {running
                   ? "Checking 6 route signals..."
                   : assessment
-                    ? "Run route check again"
-                    : "Run Tampa → Tallahassee demo"}{" "}
+                    ? "Route change found · review"
+                    : "Check Tampa route for changes"}{" "}
                 <span>→</span>
               </button>
               <button
@@ -503,31 +579,27 @@ function App() {
           </div>
         </section>
 
-        <section className="flight-strip" id="route">
-          <div>
-            <small>FLIGHT</small>
-            <b>
-              KTPF <span>→</span> KTLH
-            </b>
-          </div>
-          <div>
-            <small>DEPARTURE</small>
-            <b>SEP 2 · 6:00 PM ET</b>
-          </div>
-          <div>
-            <small>RULES / AIRCRAFT</small>
-            <b>VFR · C172</b>
-          </div>
-          <div>
-            <small>PILOT PROFILE</small>
-            <b>VFR ONLY</b>
-          </div>
-          <button onClick={runAssessment} disabled={running}>
-            {running
-              ? "CHECKING ROUTE..."
-              : assessment
-                ? "ROUTE CHECK COMPLETE ✓"
-                : "ASK AI TO CHECK ROUTE"}
+        <section className="flight-strip process-strip" id="route">
+          <article>
+            <strong>1</strong>
+            <span><small>ASK ONCE</small><b>What changed ahead?</b></span>
+          </article>
+          <article>
+            <strong>2</strong>
+            <span><small>WEBMCP DOUBLE-CHECKS</small><b>Route, limits, weather, sources</b></span>
+          </article>
+          <article>
+            <strong>3</strong>
+            <span><small>PILOT DECIDES</small><b>One concise, validated picture</b></span>
+          </article>
+          <button
+            onClick={() =>
+              document
+                .querySelector("#ai-route-check")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+          >
+            ASK THE AI <span>→</span>
           </button>
         </section>
 
@@ -713,6 +785,74 @@ function App() {
           </div>
         </section>
 
+        <section className="case-studies" id="case-studies">
+          <div className="case-studies-head">
+            <div>
+              <p className="eyebrow">WHY A SECOND PAIR OF EYES MATTERS</p>
+              <h2>The threat is not missing data. It is missing the moment.</h2>
+            </div>
+            <p>
+              Crews already have radar, dispatch, ATC, forecasts, procedures,
+              and experience. These investigations show that the picture can
+              still change faster than one display or one mental model. IMC
+              Guardian is designed as a challenge layer, not a confirmation
+              machine.
+            </p>
+          </div>
+          <div className="case-study-grid">
+            {caseStudies.map((study, index) => (
+              <article className={index === 0 ? "featured" : ""} key={study.flight}>
+                <header>
+                  <span>{study.year} · {study.label}</span>
+                  <b>0{index + 1}</b>
+                </header>
+                <h3>{study.flight}</h3>
+                <small>{study.route}</small>
+                <h4>{study.headline}</h4>
+                <p>{study.detail}</p>
+                <div className="case-lesson">
+                  <span>WHAT THIS TEACHES THE PRODUCT</span>
+                  <b>{study.lesson}</b>
+                </div>
+                <a href={study.href} target="_blank" rel="noreferrer">
+                  {study.source} <span>↗</span>
+                </a>
+              </article>
+            ))}
+          </div>
+          <div className="future-data-bridge">
+            <div className="future-copy">
+              <p className="eyebrow">FUTURE COMMERCIAL DATA BRIDGE</p>
+              <h2>“Guardian, what do you see?”</h2>
+              <p>
+                A pilot should be able to ask one question and get the
+                disagreement, not another wall of instruments. With a
+                commercial aircraft feed and an approved onboard data path,
+                WebMCP could compare where the aircraft reports it is, where it
+                is headed, what altitude sources report, and what weather sits
+                ahead.
+              </p>
+              <strong>Expose the disagreement fast. Let the pilot fly the airplane.</strong>
+            </div>
+            <div className="signal-stack">
+              <div><span>01</span><b>POSITION</b><small>Latitude, longitude, route progress</small></div>
+              <div><span>02</span><b>ALTITUDE</b><small>Pressure altitude vs. GPS geometric altitude</small></div>
+              <div><span>03</span><b>MOTION</b><small>Ground track, groundspeed, vertical trend</small></div>
+              <div><span>04</span><b>WEATHER AHEAD</b><small>Clouds, turbulence, ceilings, advisories</small></div>
+              <div className="signal-warning"><span>!</span><b>AIRSPEED BOUNDARY</b><small>ADS-B does not report pitot-derived airspeed. Aircraft integration is required.</small></div>
+            </div>
+            <footer>
+              <span>FAA: ADS-B OUT BROADCASTS CORE DATA ABOUT ONCE PER SECOND</span>
+              <a href="https://www.faa.gov/air_traffic/technology/equipadsb/resources/faq" target="_blank" rel="noreferrer">VERIFY THE DATA BOUNDARY ↗</a>
+            </footer>
+          </div>
+          <p className="case-boundary">
+            These investigations define the problem space. IMC Guardian does
+            not claim it would have prevented any event, and the prototype is
+            not an official briefing or certified aircraft system.
+          </p>
+        </section>
+
         <section className="evidence" id="evidence">
           <div className="section-title">
             <p className="eyebrow">ONE ROUTE. EVERY SIGNAL.</p>
@@ -885,7 +1025,7 @@ function App() {
           </div>
         </section>
 
-        <section className="route-watch">
+        <section className="route-watch" id="route-watch">
           <div>
             <p className="eyebrow">DEMO NOTIFICATIONS · PILOT CONTROLLED</p>
             <h2>Stay ahead of a changing route.</h2>

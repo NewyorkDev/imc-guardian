@@ -73,9 +73,7 @@ export default function CesiumWeatherGlobe({ samples = [] }) {
   const layerCleanupTimersRef = useRef([]);
   const framesRef = useRef([]);
   const frameRef = useRef(0);
-  const focusedRef = useRef(false);
   const [ready, setReady] = useState(false);
-  const [focused, setFocused] = useState(false);
   const [playing, setPlaying] = useState(true);
   const [frames, setFrames] = useState([]);
   const [frameIndex, setFrameIndex] = useState(0);
@@ -108,7 +106,6 @@ export default function CesiumWeatherGlobe({ samples = [] }) {
   useEffect(() => {
     if (!container.current) return undefined;
     let disposed = false;
-    let rotationRemover;
     const viewer = new Viewer(container.current, {
       baseLayer: false,
       animation: false,
@@ -133,6 +130,7 @@ export default function CesiumWeatherGlobe({ samples = [] }) {
     viewer.scene.fog.enabled = true;
     viewer.scene.screenSpaceCameraController.minimumZoomDistance = 350000;
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = 32000000;
+    viewer.scene.screenSpaceCameraController.enableInputs = false;
 
     const addLayers = async () => {
       try {
@@ -207,13 +205,8 @@ export default function CesiumWeatherGlobe({ samples = [] }) {
       },
     });
     viewer.camera.setView({
-      destination: Cartesian3.fromDegrees(-76, 23, 17800000),
-      orientation: { heading: 0, pitch: CesiumMath.toRadians(-89), roll: 0 },
-    });
-    rotationRemover = viewer.clock.onTick.addEventListener(() => {
-      if (!focusedRef.current && !viewer.scene.screenSpaceCameraController._aggregator?.anyButtonDown) {
-        viewer.scene.camera.rotate(Cartesian3.UNIT_Z, -0.000035);
-      }
+      destination: Cartesian3.fromDegrees(-83.25, 29.2, 1700000),
+      orientation: { heading: 0, pitch: CesiumMath.toRadians(-90), roll: 0 },
     });
     setReady(true);
 
@@ -241,7 +234,6 @@ export default function CesiumWeatherGlobe({ samples = [] }) {
     loadTimes();
     return () => {
       disposed = true;
-      rotationRemover?.();
       layerCleanupTimersRef.current.forEach((timer) => window.clearTimeout(timer));
       viewerRef.current = null;
       if (!viewer.isDestroyed()) viewer.destroy();
@@ -288,33 +280,18 @@ export default function CesiumWeatherGlobe({ samples = [] }) {
   const focusFlorida = () => {
     const viewer = viewerRef.current;
     if (!viewer) return;
-    focusedRef.current = true;
-    setFocused(true);
     viewer.camera.flyTo({
       destination: Cartesian3.fromDegrees(-83.25, 29.2, 1700000),
       orientation: { heading: CesiumMath.toRadians(0), pitch: CesiumMath.toRadians(-90), roll: 0 },
       duration: 2.8,
     });
   };
-  const spaceView = () => {
-    const viewer = viewerRef.current;
-    if (!viewer) return;
-    focusedRef.current = false;
-    setFocused(false);
-    viewer.camera.flyTo({
-      destination: Cartesian3.fromDegrees(-76, 23, 17800000),
-      orientation: { heading: 0, pitch: CesiumMath.toRadians(-89), roll: 0 },
-      duration: 2.4,
-    });
-  };
-
   return (
     <div className="cesium-weather-experience">
       <div ref={container} className="cesium-globe" />
-      <div className="space-sequence"><span className={!focused ? "active" : ""}>SPACE VIEW</span><i>→</i><span>LIVE CLOUDS</span><i>→</i><span className={focused ? "active" : ""}>FLORIDA ROUTE</span><i>→</i><span>IMC RISK</span></div>
+      <div className="space-sequence"><span className="active">FLORIDA FOCUS</span><i>→</i><span>LIVE CLOUDS</span><i>→</i><span>ROUTE WEATHER</span><i>→</i><span>IMC RISK</span></div>
       <div className="globe-controls">
-        <button className={!focused ? "active" : ""} onClick={spaceView}>EARTH</button>
-        <button className={focused ? "active" : ""} onClick={focusFlorida}>FOCUS FLORIDA</button>
+        <button className="active" onClick={focusFlorida}>FLORIDA VIEW LOCKED</button>
       </div>
       <div className="satellite-status">
         <span><i className={ready ? "ready" : ""} /> NASA GOES-EAST</span>
