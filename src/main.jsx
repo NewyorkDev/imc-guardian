@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { createGuardianEngine } from "./engine.js";
 import { installWebMcp, toolDefinitions } from "./webmcp.js";
 import { airports, demoRoute, forecasts, observations } from "./scenario.js";
+import { delta175Replay } from "./incidentReplay.js";
 import CesiumWeatherGlobe from "./CesiumWeatherGlobe.jsx";
 import "./styles.css";
 import "./live.css";
@@ -130,6 +131,12 @@ function App() {
     error: "",
   });
   const [decision, setDecision] = useState("");
+  const [replayRun, setReplayRun] = useState({
+    status: "idle",
+    active: -1,
+    comparison: null,
+    limits: null,
+  });
   const state = engine.state;
   const invoke = (name, input = {}) => {
     try {
@@ -160,6 +167,19 @@ function App() {
         .querySelector("#ai-route-check")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 180);
+  };
+  const runIncidentReplay = async () => {
+    if (replayRun.status === "running") return;
+    setReplayRun({ status: "running", active: 0, comparison: null, limits: null });
+    invoke("load_incident_replay", { caseId: delta175Replay.caseId });
+    await new Promise((resolve) => window.setTimeout(resolve, 380));
+    setReplayRun((current) => ({ ...current, active: 1 }));
+    const comparison = invoke("compare_incident_evidence");
+    await new Promise((resolve) => window.setTimeout(resolve, 380));
+    setReplayRun((current) => ({ ...current, active: 2, comparison }));
+    const limits = invoke("explain_replay_limits");
+    await new Promise((resolve) => window.setTimeout(resolve, 280));
+    setReplayRun({ status: "complete", active: 3, comparison, limits });
   };
   const loadLiveContext = async (showPanel = true) => {
     setLiveError("");
@@ -805,6 +825,91 @@ function App() {
               Guardian is designed as a challenge layer, not a confirmation
               machine.
             </p>
+          </div>
+          <div className="incident-replay" id="incident-replay">
+            <header className="replay-head">
+              <div>
+                <p className="eyebrow">HISTORICAL EVIDENCE REPLAY · NTSB FINAL REPORT</p>
+                <h2>Did the crew read the change correctly?</h2>
+              </div>
+              <div className="replay-identity">
+                <span>DAL175 · AUG 29, 2023</span>
+                <b>MXP <i>→</i> ATL</b>
+                <small>A350-941 · N576DZ</small>
+              </div>
+            </header>
+
+            <div className="replay-timeline">
+              {delta175Replay.timeline.map((item, index) => (
+                <article className={index === 3 ? "crew-concern" : index === 4 ? "event" : ""} key={item.time}>
+                  <span>0{index + 1}</span>
+                  <time>{item.time}</time>
+                  <b>{item.label}</b>
+                  <p>{item.detail}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="replay-weather">
+              {delta175Replay.weatherEvidence.map((item) => (
+                <div key={item.label}>
+                  <small>{item.label}</small>
+                  <b>{item.value}</b>
+                  <span>{item.detail}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="replay-question">
+              <div className="replay-quote">
+                <small>CREW REPORT · 22:30 UTC</small>
+                <blockquote>“It’s good right now but it’s about to get worse.”</blockquote>
+                <span>Severe turbulence followed at 22:31:15 UTC.</span>
+              </div>
+              <div className="replay-tools">
+                {[
+                  ["load_incident_replay", "Load the official evidence package"],
+                  ["compare_incident_evidence", "Compare concern with recorded outcome"],
+                  ["explain_replay_limits", "Separate proof from speculation"],
+                ].map(([name, description], index) => (
+                  <div className={replayRun.active >= index ? "complete" : ""} key={name}>
+                    <i>{replayRun.active > index || replayRun.status === "complete" ? "✓" : index + 1}</i>
+                    <span><code>{name}</code><small>{description}</small></span>
+                  </div>
+                ))}
+                <button onClick={runIncidentReplay} disabled={replayRun.status === "running"}>
+                  {replayRun.status === "running"
+                    ? `Running WebMCP check ${Math.min(replayRun.active + 1, 3)} of 3...`
+                    : replayRun.status === "complete"
+                      ? "Run the evidence replay again"
+                      : "Run Delta 175 evidence replay"}
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
+
+            <div className={`replay-verdict ${replayRun.status}`} aria-live="polite">
+              <div className="verdict-label">
+                <small>WEBMCP FINDING</small>
+                <b>{replayRun.comparison?.verdict.label || "AWAITING EVIDENCE COMPARISON"}</b>
+              </div>
+              <div className="verdict-copy">
+                <p>{replayRun.comparison?.verdict.finding || "Run the replay to compare the crew’s documented concern with the recorded event and final NTSB findings."}</p>
+                {replayRun.comparison && (
+                  <>
+                    <span><strong>THE GAP</strong>{replayRun.comparison.verdict.evidenceGap}</span>
+                    <span><strong>THE EXTRA CHANNEL</strong>{replayRun.comparison.verdict.additionalChannel}</span>
+                    <span className="not-proven"><strong>NOT PROVEN</strong>{replayRun.comparison.verdict.notSupported}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <footer className="replay-source">
+              <span>STRUCTURED FROM NTSB DCA23FA428 · PUBLISHED JUNE 19, 2025</span>
+              <a href={delta175Replay.source.reportUrl} target="_blank" rel="noreferrer">OPEN FINAL REPORT ↗</a>
+              <a href={delta175Replay.source.docketUrl} target="_blank" rel="noreferrer">OPEN 20-ITEM DOCKET ↗</a>
+            </footer>
           </div>
           <div className="case-study-grid">
             {caseStudies.map((study, index) => (

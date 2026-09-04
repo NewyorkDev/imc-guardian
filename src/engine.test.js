@@ -27,4 +27,16 @@ describe('IMC Guardian engine', () => {
     expect(engine.run('validate_weather_alert', { alertId: change.alert.id }).validated).toBe(true);
     expect(engine.run('acknowledge_weather_alert', { alertId: change.alert.id }).acknowledged).toBe(true);
   });
+  it('supports the documented Delta 175 concern without judging pilot action', () => {
+    const engine = createGuardianEngine();
+    const replay = engine.run('load_incident_replay', { caseId: 'delta-175-2023' });
+    expect(replay.source.report).toBe('DCA23FA428 Final Report');
+    const comparison = engine.run('compare_incident_evidence');
+    expect(comparison.verdict.concernSupported).toBe(true);
+    expect(comparison.verdict.actionJudgment).toBeNull();
+    expect(comparison.pilotAction).toBeNull();
+    expect(comparison.clearance).toBeNull();
+    expect(comparison.verdict.notSupported).toMatch(/does not establish/);
+    expect(engine.run('explain_replay_limits').operational).toBe(false);
+  });
 });

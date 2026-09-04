@@ -10,7 +10,10 @@ export const toolDefinitions = [
   ['check_route_changes', 'Check the watched route for a material scenario change and return evidence, source context, and a workload-aware attention cue. This never directs a maneuver.', {}, []],
   ['validate_weather_alert', 'Double-check an active alert against its configured threshold, timestamped source product, related forecast, and advisory context before presentation.', { alertId: { type: 'string' } }, ['alertId']],
   ['acknowledge_weather_alert', 'Acknowledge that a displayed weather attention cue was seen. This does not resolve the condition or authorize a flight action.', { alertId: { type: 'string' } }, ['alertId']],
-  ['record_pilot_decision', 'Record the pilot’s explicit choice for the demo. This never authorizes, dispatches, files, or clears a flight.', { choice: { type: 'string', enum: ['delay', 'alternate', 'cancel', 'continue_after_official_briefing'] } }, ['choice']]
+  ['record_pilot_decision', 'Record the pilot’s explicit choice for the demo. This never authorizes, dispatches, files, or clears a flight.', { choice: { type: 'string', enum: ['delay', 'alternate', 'cancel', 'continue_after_official_briefing'] } }, ['choice']],
+  ['load_incident_replay', 'Load the documented Delta 175 historical evidence package from the NTSB final report and public docket. This is not live or certified flight data.', { caseId: { type: 'string', enum: ['delta-175-2023'] } }, []],
+  ['compare_incident_evidence', 'Compare the crew’s documented concern with the recorded event and final investigation findings. Returns no judgment of pilot action and no counterfactual prevention claim.', {}, []],
+  ['explain_replay_limits', 'Explain the provenance, operational boundary, and limits of the historical incident replay.', {}, []]
 ];
 
 export async function installWebMcp(engine, onUpdate) {

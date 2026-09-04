@@ -1,9 +1,10 @@
 import { airports, demoRoute, forecasts, observations } from './scenario.js';
+import { delta175Replay, delta175Verdict } from './incidentReplay.js';
 
 const rank = { LIFR: 4, IFR: 3, MVFR: 2, VFR: 1 };
 
 export function createGuardianEngine() {
-  const state = { route: null, assessment: null, selectedAlternate: null, routeWatch: null, alert: null, events: [] };
+  const state = { route: null, assessment: null, selectedAlternate: null, routeWatch: null, alert: null, incidentReplay: null, events: [] };
   const record = (name, input, output) => { state.events.push({ name, input, output, at: new Date().toISOString() }); return output; };
   const requireRoute = () => { if (!state.route) throw new Error('Set a route before requesting route-specific analysis.'); };
   return {
@@ -53,6 +54,38 @@ export function createGuardianEngine() {
         case 'record_pilot_decision':
           if (!input.choice) throw new Error('A pilot choice is required.');
           output = { recorded: true, choice: input.choice, status: 'decision_logged', note: 'The application records the human decision but never authorizes or clears a flight.' }; break;
+        case 'load_incident_replay':
+          if (input.caseId && input.caseId !== delta175Replay.caseId) throw new Error('The requested incident replay is not available.');
+          state.incidentReplay = delta175Replay;
+          output = delta175Replay;
+          break;
+        case 'compare_incident_evidence':
+          if (!state.incidentReplay) throw new Error('Load an incident replay before comparing its evidence.');
+          output = {
+            caseId: state.incidentReplay.caseId,
+            verdict: delta175Verdict,
+            compared: {
+              crewConcern: state.incidentReplay.timeline.find(item => item.label === 'Concern stated'),
+              recordedEvent: state.incidentReplay.observedEvent,
+              finalFindings: state.incidentReplay.investigationFindings,
+            },
+            pilotAction: null,
+            clearance: null,
+          };
+          break;
+        case 'explain_replay_limits':
+          output = {
+            historical: true,
+            operational: false,
+            limitations: [
+              'This is a structured reconstruction of a completed NTSB investigation, not a replay of certified live flight data.',
+              'It tests whether WebMCP can expose and compare the documented evidence. It does not recreate what every system displayed second by second.',
+              'It does not judge a pilot decision, direct a maneuver, issue a clearance, or prove a counterfactual outcome.',
+              'IMC Guardian did not exist on this flight and cannot be claimed to have prevented the encounter.',
+            ],
+            source: delta175Replay.source,
+          };
+          break;
         default: throw new Error(`Unknown tool: ${name}`);
       }
       return record(name, input, output);
