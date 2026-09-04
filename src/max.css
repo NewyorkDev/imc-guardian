@@ -21,7 +21,7 @@ body { font-family: "Inter Tight", sans-serif; }
   border-color: #283c41;
   backdrop-filter: blur(16px);
 }
-.brand .shield { background: #172a30; border: 1px solid #3b535a; }
+.brand .cloud-mark { filter: drop-shadow(0 0 12px rgba(203, 255, 61, .18)); }
 .brand small { color: #82979b; }
 .app > header nav a { color: #9badb1; }
 .app > header nav a:hover { color: #fff; }

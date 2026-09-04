@@ -41,15 +41,34 @@ body {
   text-decoration: none;
   color: inherit;
 }
-.brand .shield {
-  background: var(--ink);
-  color: var(--lime);
-  width: 43px;
+.brand .cloud-mark {
+  width: 48px;
   height: 43px;
   display: grid;
   place-items: center;
-  clip-path: polygon(50% 0, 100% 18%, 92% 78%, 50% 100%, 8% 78%, 0 18%);
-  font-weight: 800;
+}
+.brand .cloud-mark svg {
+  width: 47px;
+  height: 38px;
+  overflow: visible;
+}
+.brand .cloud-line,
+.brand .route-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.brand .cloud-line {
+  stroke: #d9e4e6;
+  stroke-width: 2.4;
+}
+.brand .route-line {
+  stroke: var(--lime);
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+.brand .cloud-mark circle {
+  fill: var(--lime);
 }
 .brand b {
   display: block;

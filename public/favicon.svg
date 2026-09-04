@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <path fill="#14282e" stroke="#496168" stroke-width="2" d="M32 3 56 12v18c0 15-9 25-24 31C17 55 8 45 8 30V12Z"/>
-  <text x="32" y="39" fill="#cbff3d" font-family="Arial, sans-serif" font-size="21" font-weight="800" text-anchor="middle">IG</text>
+  <rect width="64" height="64" rx="14" fill="#071316"/>
+  <path d="M15 45h34c7 0 12-5 12-12s-5-12-12-12h-3C43 12 37 7 28 7 17 7 10 15 10 26 4 27 1 31 1 36c0 6 5 9 14 9Z" fill="none" stroke="#d9e4e6" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M14 39c10-1 14-11 23-10 6 1 8 6 14 3" fill="none" stroke="#cbff3d" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 4"/>
+  <circle cx="14" cy="39" r="3" fill="#cbff3d"/>
+  <circle cx="51" cy="32" r="3" fill="#cbff3d"/>
 </svg>

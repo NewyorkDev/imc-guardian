@@ -354,10 +354,17 @@ function App() {
     <div className="app">
       <header>
         <a className="brand" href="#top">
-          <span className="shield">IG</span>
+          <span className="cloud-mark" aria-hidden="true">
+            <svg viewBox="0 0 54 42" role="presentation">
+              <path className="cloud-line" d="M13 33h28c6 0 10-4 10-9s-4-9-10-9h-2C37 8 32 4 25 4c-8 0-14 6-14 14C6 19 3 22 3 27c0 4 4 6 10 6Z" />
+              <path className="route-line" d="M13 28c8-1 11-9 18-8 5 1 7 5 12 2" />
+              <circle cx="13" cy="28" r="2" />
+              <circle cx="43" cy="22" r="2" />
+            </svg>
+          </span>
           <span>
             <b>IMC GUARDIAN</b>
-            <small>SMART WEATHER NOTIFICATIONS</small>
+            <small>ROUTE WEATHER INTELLIGENCE</small>
           </span>
         </a>
         <nav>
