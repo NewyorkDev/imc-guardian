@@ -584,6 +584,84 @@
   float: right;
 }
 
+.source-register {
+  position: relative;
+  z-index: 1;
+  margin-top: 30px;
+  border: 1px solid #385159;
+  background: #0d2025;
+}
+
+.source-register > header {
+  display: grid;
+  grid-template-columns: 1fr .7fr;
+  gap: 50px;
+  align-items: end;
+  padding: 28px 30px;
+  border-bottom: 1px solid #385159;
+}
+
+.source-register h3 {
+  margin: 8px 0 0;
+  font-size: clamp(30px, 3.2vw, 51px);
+  line-height: .95;
+  letter-spacing: -.05em;
+}
+
+.source-register > header > p {
+  margin: 0;
+  color: #92a5a9;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.source-register > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.source-register > div > a {
+  display: grid;
+  grid-template-columns: 34px 145px 1fr auto;
+  gap: 13px;
+  align-items: center;
+  min-height: 62px;
+  padding: 12px 17px;
+  color: #fff;
+  text-decoration: none;
+  border-right: 1px solid #30464b;
+  border-bottom: 1px solid #30464b;
+}
+
+.source-register > div > a:nth-child(2n) {
+  border-right: 0;
+}
+
+.source-register > div > a:hover {
+  background: #162d32;
+}
+
+.source-register a > span {
+  color: #586e73;
+  font: 700 10px "DM Mono", monospace;
+}
+
+.source-register a > b {
+  font-size: 11px;
+}
+
+.source-register a > small {
+  color: #91a4a8;
+  font: 600 7px "DM Mono", monospace;
+  letter-spacing: .06em;
+}
+
+.source-register a > em {
+  color: var(--lime);
+  font: 700 7px "DM Mono", monospace;
+  font-style: normal;
+}
+
 .future-data-bridge {
   position: relative;
   z-index: 1;
@@ -706,6 +784,9 @@
   .case-study-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .source-register > header {
+    grid-template-columns: 1fr;
+  }
   .replay-timeline {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -749,6 +830,13 @@
   }
   .case-study-grid > article.featured {
     grid-column: auto;
+  }
+  .source-register > div {
+    grid-template-columns: 1fr;
+  }
+  .source-register > div > a,
+  .source-register > div > a:nth-child(2n) {
+    border-right: 0;
   }
   .future-data-bridge {
     padding: 31px;
@@ -819,5 +907,11 @@
   }
   .verdict-copy > p {
     grid-column: auto;
+  }
+  .source-register > div > a {
+    grid-template-columns: 28px 1fr auto;
+  }
+  .source-register a > small {
+    grid-column: 2;
   }
 }

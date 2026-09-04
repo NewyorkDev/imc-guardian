@@ -125,9 +125,12 @@ function App() {
       "I am flying VFR from Tampa to Tallahassee at 6 PM in a C172. Check my route and watch for worsening weather.",
     plan: [],
     active: -1,
+    provider: "",
     model: "",
     message: "",
     usage: null,
+    connection: null,
+    fallback: false,
     error: "",
   });
   const [decision, setDecision] = useState("");
@@ -285,6 +288,8 @@ function App() {
       status: "planning",
       plan: [],
       active: -1,
+      connection: null,
+      fallback: false,
       error: "",
     }));
     try {
@@ -302,9 +307,12 @@ function App() {
         ...current,
         status: "executing",
         plan: plan.toolPlan,
+        provider: plan.provider,
         model: plan.model,
         message: plan.pilotMessage,
         usage: plan.usage,
+        connection: plan.connection || null,
+        fallback: Boolean(plan.fallback),
       }));
       const inputs = {
         set_flight_context: demoRoute,
@@ -711,6 +719,38 @@ function App() {
                 {aiRun.model ? aiRun.model.replace("nvidia/", "") : "READY"}
               </b>
             </div>
+            <div className={`groq-server ${aiRun.connection?.status || aiRun.status}`}>
+              <div className="groq-status-line">
+                <span><i /> GROQ SERVER</span>
+                <b>
+                  {aiRun.status === "planning"
+                    ? "CONNECTING"
+                    : aiRun.connection?.status === "online"
+                      ? "ONLINE · RESPONSE RECEIVED"
+                      : aiRun.connection?.status === "fallback"
+                        ? "FALLBACK ACTIVE"
+                        : aiRun.status === "error"
+                          ? "REQUEST FAILED"
+                          : "READY TO CONNECT"}
+                </b>
+              </div>
+              <div className="groq-request-path">
+                <span><small>BROWSER</small><b>POST /api/agent</b></span>
+                <i>→</i>
+                <span><small>VERCEL SERVER</small><b>API key protected</b></span>
+                <i>→</i>
+                <span><small>GROQ UPSTREAM</small><b>/chat/completions</b></span>
+              </div>
+              <div className="groq-envelope">
+                <div><small>MODEL</small><code>{aiRun.connection?.model || "openai/gpt-oss-120b"}</code></div>
+                <div><small>REQUEST</small><code>temperature 0.1 · max 500 tokens · JSON</code></div>
+                <div><small>INPUT</small><code>{aiRun.prompt.length} prompt chars · 10 allowed tools</code></div>
+                <div><small>RECEIPT</small><code>{aiRun.connection?.requestId ? `${String(aiRun.connection.requestId).slice(0, 22)}${String(aiRun.connection.requestId).length > 22 ? "…" : ""}` : "pending"}</code></div>
+                <div><small>ROUND TRIP</small><code>{aiRun.connection?.latencyMs ? `${aiRun.connection.latencyMs} ms` : "pending"}</code></div>
+                <div><small>USAGE</small><code>{aiRun.usage?.total_tokens ? `${aiRun.usage.total_tokens} total tokens` : "pending"}</code></div>
+              </div>
+              <p className="groq-secret-note">The browser receives connection metadata, the plan, and token usage. It never receives the Groq API key or hidden system instruction.</p>
+            </div>
             <div className="conversation">
               <div className="pilot-bubble">
                 <small>PILOT</small>
@@ -810,6 +850,12 @@ function App() {
               </div>
             )}
           </div>
+          <footer className="ai-source-links">
+            <span>IMPLEMENTATION REFERENCES</span>
+            <a href="https://console.groq.com/docs/api-reference" target="_blank" rel="noreferrer">GROQ CHAT COMPLETIONS API ↗</a>
+            <a href="https://openai.com/index/introducing-gpt-oss/" target="_blank" rel="noreferrer">OPENAI GPT-OSS ↗</a>
+            <a href="https://github.com/NewyorkDev/imc-guardian/blob/main/api/agent.js" target="_blank" rel="noreferrer">VIEW SERVER SOURCE ↗</a>
+          </footer>
         </section>
 
         <section className="case-studies" id="case-studies">
@@ -931,6 +977,31 @@ function App() {
                 </a>
               </article>
             ))}
+          </div>
+          <div className="source-register">
+            <header>
+              <div>
+                <p className="eyebrow">SUPPORTING LINKS</p>
+                <h3>Open the record behind every claim.</h3>
+              </div>
+              <p>Final, preliminary, and news sources are labeled separately. The Delta 175 replay also links the complete 20-item NTSB docket.</p>
+            </header>
+            <div>
+              {caseStudies.map((study, index) => (
+                <a href={study.href} target="_blank" rel="noreferrer" key={`source-${study.flight}`}>
+                  <span>0{index + 1}</span>
+                  <b>{study.flight}</b>
+                  <small>{study.source}</small>
+                  <em>OPEN ↗</em>
+                </a>
+              ))}
+              <a href={delta175Replay.source.docketUrl} target="_blank" rel="noreferrer">
+                <span>06</span>
+                <b>DELTA 175 DOCKET</b>
+                <small>NTSB · 20 PUBLIC ITEMS</small>
+                <em>OPEN ↗</em>
+              </a>
+            </div>
           </div>
           <div className="future-data-bridge">
             <div className="future-copy">

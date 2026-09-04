@@ -12,6 +12,7 @@ const ALLOWED_TOOLS = [
 ];
 
 export default async function handler(request, response) {
+  const requestStartedAt = Date.now();
   if (request.method !== "POST")
     return response.status(405).json({ error: "Method not allowed" });
   const apiKey = (process.env.GROQ_API_KEY || "").trim();
@@ -84,9 +85,17 @@ export default async function handler(request, response) {
     ];
     let upstream;
     let payload;
+    let selectedModel = "";
+    let selectedStrictJson = true;
+    let attemptCount = 0;
     for (const [model, strictJson] of attempts) {
+      attemptCount += 1;
       ({ upstream, payload } = await runModel(model, strictJson));
-      if (upstream.ok) break;
+      if (upstream.ok) {
+        selectedModel = model;
+        selectedStrictJson = strictJson;
+        break;
+      }
     }
     if (!upstream?.ok) {
       response.setHeader("Cache-Control", "no-store");
@@ -95,6 +104,17 @@ export default async function handler(request, response) {
         model: "Validated deterministic planner",
         usage: null,
         fallback: true,
+        connection: {
+          status: "fallback",
+          provider: "Groq unavailable",
+          serverEndpoint: "/api/agent",
+          upstreamEndpoint: "https://api.groq.com/openai/v1/chat/completions",
+          method: "POST",
+          latencyMs: Date.now() - requestStartedAt,
+          attemptCount,
+          requestId: null,
+          apiKeyExposure: "Server only. Never returned to the browser.",
+        },
         upstreamDetail:
           payload?.error?.message || "Free model temporarily unavailable",
         ...safePlan(),
@@ -138,10 +158,31 @@ export default async function handler(request, response) {
     plan.toolPlan = [...new Set([...requiredPlan, ...plan.toolPlan])];
     response.setHeader("Cache-Control", "no-store");
     return response.status(200).json({
+      ...plan,
       provider: "Groq",
       model: payload.model || "Groq hosted open-weight model",
       usage: payload.usage || null,
-      ...plan,
+      connection: {
+        status: "online",
+        provider: "Groq",
+        serverEndpoint: "/api/agent",
+        upstreamEndpoint: "https://api.groq.com/openai/v1/chat/completions",
+        method: "POST",
+        model: payload.model || selectedModel,
+        responseMode: selectedStrictJson ? "json_object" : "text JSON",
+        requestId:
+          upstream.headers.get("x-request-id") || payload.id || null,
+        latencyMs: Date.now() - requestStartedAt,
+        attemptCount,
+        request: {
+          temperature: 0.1,
+          maxCompletionTokens: 500,
+          promptCharacters: prompt.length,
+          allowlistedTools: ALLOWED_TOOLS.length,
+        },
+        apiKeyExposure: "Server only. Never returned to the browser.",
+        completedAt: new Date().toISOString(),
+      },
     });
   } catch (error) {
     return response.status(502).json({
