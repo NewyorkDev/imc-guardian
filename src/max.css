@@ -28,7 +28,21 @@ body { font-family: "Inter Tight", sans-serif; }
 .status { color: #b8c7ca; background: #102126; border-color: #33494f; }
 
 main { display: flex; flex-direction: column; }
-.hero { order: 1; min-height: calc(100vh - 76px); padding: 65px 4vw 72px; color: #fff; background: #061114; position: relative; overflow: hidden; }
+.hero {
+  order: 1;
+  min-height: calc(100vh - 76px);
+  padding: 65px 4vw 72px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  background-color: #061114;
+  background-image:
+    linear-gradient(90deg, #061114 0%, rgba(6, 17, 20, .97) 33%, rgba(6, 17, 20, .72) 58%, rgba(6, 17, 20, .24) 100%),
+    linear-gradient(0deg, rgba(6, 17, 20, .78), rgba(6, 17, 20, .03) 62%),
+    url("/assets/imc-convective-cloud-hero-v3.png");
+  background-size: cover;
+  background-position: center;
+}
 .hero::before {
   content: "";
   position: absolute;
@@ -71,13 +85,27 @@ main { display: flex; flex-direction: column; }
   position: absolute;
   z-index: -1;
   inset: 0;
-  background-image: linear-gradient(90deg, rgba(6, 17, 20, .45), rgba(6, 17, 20, .1) 42%, rgba(6, 17, 20, .3)), url("/assets/aviation-weather-hero-v2.png");
+  background-image: linear-gradient(90deg, rgba(6, 17, 20, .38), rgba(6, 17, 20, .06) 42%, rgba(6, 17, 20, .2)), url("/assets/imc-convective-cloud-hero-v3.png");
   background-size: cover;
-  background-position: center;
-  opacity: .78;
-  filter: saturate(.8) contrast(1.1);
+  background-position: 62% center;
+  opacity: .92;
+  filter: saturate(.92) contrast(1.12);
 }
-.map::after { content: "FLORIDA WEATHER CORRIDOR"; right: 4%; bottom: 3%; color: #fff; opacity: .12; font: 800 13px "DM Mono"; letter-spacing: .14em; }
+.map::after {
+  content: "IMC";
+  z-index: 1;
+  left: 4%;
+  top: 4%;
+  right: auto;
+  bottom: auto;
+  color: rgba(255, 255, 255, .1);
+  -webkit-text-stroke: 1px rgba(255, 255, 255, .45);
+  opacity: 1;
+  font: 800 clamp(86px, 8vw, 136px) "Inter Tight";
+  letter-spacing: -.08em;
+  line-height: .8;
+  text-shadow: 0 0 42px rgba(203, 255, 61, .15);
+}
 .map svg path { stroke: #d6ff57; stroke-width: 1.05; stroke-dasharray: 2.5 1.6; filter: drop-shadow(0 0 5px rgba(203, 255, 61, .7)); }
 .weather { opacity: .28; }
 .weather-one { background: #ff6d4a; }
